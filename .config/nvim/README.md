@@ -7,3 +7,6 @@ In order to modify any of the lsp server configuration use:
 ``` lua
 vim.lsp.config("lsp_provider", {settings = "new_setting"})
 ```
+
+## CodeCompanion
+In order to use code companion you have to define `MISTRAL_API_KEY` environment variable
