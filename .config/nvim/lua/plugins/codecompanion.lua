@@ -4,6 +4,13 @@ return {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
   },
+  keys = {
+    {
+      "<leader>CC",
+      ":CodeCompanionChat<CR>",
+      desc = "Open Code Companion Chat",
+    },
+  },
   opts = {
     strategies = {
       chat = {
