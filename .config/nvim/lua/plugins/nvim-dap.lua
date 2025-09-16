@@ -171,14 +171,18 @@ return {
             size = 80,
           },
           {
-            elements = { { id = "console" } },
+            elements = {
+              {
+                id = "repl",
+                size = 0.6,
+              },
+              {
+                id = "console",
+                size = 0.4,
+              },
+            },
             position = "right",
             size = 80,
-          },
-          {
-            elements = { { id = "repl" } },
-            position = "bottom",
-            size = 10,
           },
         },
       })
