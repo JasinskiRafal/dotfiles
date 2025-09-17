@@ -1,6 +1,6 @@
 return {
   "folke/which-key.nvim",
-  event = "VimEnter",
+  eent = "VimEnter",
   opts = {
     delay = 0,
   },
