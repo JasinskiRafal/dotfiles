@@ -9,13 +9,18 @@ return {
       type = "cppdbg",
     },
     cmake_executor = {
-      name = "toggleterm",
+      name = "terminal",
       opts = {
         split_direction = "vertical",
+        split_size = 100,
       },
     },
     cmake_runner = {
-      name = "toggleterm",
+      name = "terminal",
+      opts = {
+        split_direction = "vertical",
+        split_size = 100,
+      },
     },
   },
 }
