@@ -1,5 +1,5 @@
 if command -v exa &> /dev/null; then
-  alias ls='exa -lh'
+  alias ls='exa'
   alias la='exa -lah'
   alias ll='exa -lah'
   alias lt='exa -laTh'
