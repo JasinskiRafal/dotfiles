@@ -1,8 +1,7 @@
--- this is a formatting plugin based on installed formatters
 return {
   "stevearc/conform.nvim",
   event = { "BufWritePre" },
-  cmd = { "ConformInfo" },
+  cmd = { "ConformInfo", "Format" },
   keys = {
     {
       "<leader>tf",
