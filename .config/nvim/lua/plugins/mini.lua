@@ -13,6 +13,7 @@ return {
     require("mini.icons").setup()
     require("mini.icons").mock_nvim_web_devicons()
     require("mini.trailspace").setup()
+    require("mini.diff").setup()
   end,
   lazy = false,
   keys = {
