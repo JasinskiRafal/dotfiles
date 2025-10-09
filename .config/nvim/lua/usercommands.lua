@@ -15,6 +15,3 @@ vim.api.nvim_create_user_command("DebugExit", function()
   end
 end, { desc = "Exit debug UI" })
 
-vim.api.nvim_create_user_command("Format", function()
-  require("conform").format({ timeout_ms = 500, lsp_format = "fallback" })
-end, { desc = "Format current buffer" })
