@@ -37,7 +37,7 @@ return {
     quickfile = { enabled = true },
     rename = { enabled = true },
     scope = { enabled = true },
-    statuscolumn = { enabled = true },
+    statuscolumn = { enabled = false },
     terminal = {
       cmd = "/bin/bash",
       start_insert = true,
