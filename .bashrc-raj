@@ -3,4 +3,5 @@ if command -v exa &> /dev/null; then
   alias la='exa -lah'
   alias ll='exa -lah'
   alias lt='exa -laTh'
+  alias l='exa -l'
 fi
