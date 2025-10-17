@@ -122,6 +122,13 @@ return {
       desc = "Find Files",
     },
     {
+      "<leader>fF",
+      function()
+        Snacks.picker.files({ hidden = true })
+      end,
+      desc = "Find Files",
+    },
+    {
       "<leader>fg",
       function()
         Snacks.picker.git_files()
@@ -218,6 +225,13 @@ return {
       "<leader>sg",
       function()
         Snacks.picker.grep()
+      end,
+      desc = "Grep",
+    },
+    {
+      "<leader>sG",
+      function()
+        Snacks.picker.grep({hidden = true})
       end,
       desc = "Grep",
     },
