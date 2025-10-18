@@ -99,7 +99,6 @@ require("lazy").setup({
 })
 
 require("autocommands")
-require("clipboard")
 require("health")
 require("keymappings")
 require("lsp")
