@@ -56,9 +56,7 @@ return {
       {
         "<leader>da",
         function()
-          require("dap").toggle_breakpoint()
-          require("dap").continue()
-          require("dap").toggle_breakpoint()
+          require("dap").run_to_cursor()
         end,
         desc = "Advance to cursor",
         mode = { "n" },
