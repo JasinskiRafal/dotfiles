@@ -41,8 +41,8 @@ return {
     terminal = {
       cmd = "/bin/bash",
       start_insert = true,
-      auto_insert = false,
-      auto_close = true,
+      auto_insert = true,
+      auto_close = false,
       win = { position = "right" },
     },
     words = { enabled = true },
