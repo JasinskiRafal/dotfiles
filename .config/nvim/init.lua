@@ -69,6 +69,8 @@ vim.opt.shell = "/bin/bash"
 -- Enable local exrc files, such as .nvim.lua, .nvimrc, .exrc
 vim.opt.exrc = true
 
+vim.opt.winborder = "rounded"
+
 -- Set diagnotics to more easy icons
 vim.diagnostic.config({
   virtual_text = true,
