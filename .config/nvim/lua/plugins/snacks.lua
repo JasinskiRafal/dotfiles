@@ -37,11 +37,11 @@ return {
     quickfile = { enabled = true },
     rename = { enabled = true },
     scope = { enabled = true },
-    statuscolumn = { enabled = false },
+    statuscolumn = { enabled = true },
     terminal = {
       cmd = "/bin/bash",
       start_insert = true,
-      auto_insert = true,
+      auto_insert = false,
       auto_close = false,
       win = { position = "right" },
     },
