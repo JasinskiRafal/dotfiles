@@ -38,13 +38,7 @@ return {
     rename = { enabled = true },
     scope = { enabled = true },
     statuscolumn = { enabled = true },
-    terminal = {
-      cmd = "/bin/bash",
-      start_insert = true,
-      auto_insert = false,
-      auto_close = false,
-      win = { position = "right" },
-    },
+    terminal = { enabled = false },
     words = { enabled = true },
   },
   keys = {
@@ -231,7 +225,7 @@ return {
     {
       "<leader>sG",
       function()
-        Snacks.picker.grep({hidden = true})
+        Snacks.picker.grep({ hidden = true })
       end,
       desc = "Grep",
     },
@@ -441,21 +435,6 @@ return {
         Snacks.picker.lsp_workspace_symbols()
       end,
       desc = "LSP Workspace Symbols",
-    },
-    -- Terminal
-    {
-      "<leader>vt",
-      function()
-        Snacks.terminal.toggle()
-      end,
-      desc = "Toggle terminal",
-    },
-    {
-      "<leader>vT",
-      function()
-        Snacks.terminal.open()
-      end,
-      desc = "Open terminal",
     },
     {
       "<leader>gg",
