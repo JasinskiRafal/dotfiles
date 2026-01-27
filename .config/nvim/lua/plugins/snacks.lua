@@ -38,7 +38,6 @@ return {
     rename = { enabled = true },
     scope = { enabled = true },
     statuscolumn = { enabled = true },
-    terminal = { enabled = false },
     words = { enabled = true },
   },
   keys = {
