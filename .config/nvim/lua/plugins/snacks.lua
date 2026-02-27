@@ -29,8 +29,8 @@ return {
       only_scope = true,
       animate = { enabled = false },
     },
+    git = { enabled = true },
     input = { enabled = true },
-    lazygit = { enabled = true, win = { position = "float" } },
     notifier = { enabled = true, timeout = 5000 },
     picker = { enabled = true },
     quickfile = { enabled = true },
@@ -371,11 +371,11 @@ return {
       desc = "LSP Workspace Symbols",
     },
     {
-      "<leader>gg",
+      "<leader>gb",
       function()
-        Snacks.lazygit.open()
+        Snacks.git.blame_line()
       end,
-      desc = "Open lazygit",
+      desc = "Git blame line",
     },
   },
 }
