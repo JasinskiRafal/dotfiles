@@ -1,6 +1,6 @@
 return {
   "akinsho/toggleterm.nvim",
-  opts = { direction = "vertical", size = vim.o.columns * 0.4 },
+  opts = { direction = "tab" },
   keys = {
     {
       "<leader>vt",
