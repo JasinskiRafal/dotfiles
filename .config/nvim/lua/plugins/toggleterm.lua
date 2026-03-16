@@ -1,6 +1,11 @@
 return {
   "akinsho/toggleterm.nvim",
-  opts = { direction = "tab" },
+  opts = {
+    direction = "float",
+    float_opts = {
+      border = "curved",
+    },
+  },
   keys = {
     {
       "<leader>vt",
@@ -8,9 +13,10 @@ return {
       desc = "Toggle terminal",
     },
     {
-      "<leader>vT",
-      ":TermNew<CR>",
-      desc = "Open new terminal",
+      "<Esc><Esc>",
+      "<C-\\><C-n> :ToggleTerm<CR>",
+      mode = "t",
+      desc = "Exit terminal mode",
     },
   },
 }
