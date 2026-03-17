@@ -12,11 +12,5 @@ return {
       ":ToggleTerm<CR>",
       desc = "Toggle terminal",
     },
-    {
-      "<Esc><Esc>",
-      "<C-\\><C-n> :ToggleTerm<CR>",
-      mode = "t",
-      desc = "Exit terminal mode",
-    },
   },
 }
