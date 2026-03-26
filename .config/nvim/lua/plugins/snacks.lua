@@ -18,6 +18,7 @@ return {
       },
       sections = {
         { section = "header" },
+        { section = "projects", padding = 1 },
         { section = "startup" },
       },
     },

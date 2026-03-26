@@ -12,7 +12,6 @@ return {
     -- appearance
     require("mini.icons").setup()
     require("mini.icons").mock_nvim_web_devicons()
-    require("mini.trailspace").setup()
     require("mini.diff").setup({
       view = {
         style = "sign",
@@ -23,10 +22,15 @@ return {
         },
       },
     })
+
+    require("mini.trailspace").setup()
+    local enable_trail_highlight = function(args)
+      vim.b[args.buf].minitrailspace_disable = true
+    end
+    vim.api.nvim_create_autocmd("User", { pattern = "SnacksDashboardOpened", callback = enable_trail_highlight })
   end,
   lazy = false,
   keys = {
-    -- Top Pickers & Explorer
     {
       "<leader>tr",
       function()
