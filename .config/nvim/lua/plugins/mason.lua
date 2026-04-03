@@ -1,41 +1,21 @@
-return {
-  {
-    "mason-org/mason.nvim",
-    event = "VeryLazy",
-    opts = {},
+vim.pack.add({
+  "https://github.com/mason-org/mason.nvim",
+  "https://github.com/WhoIsSethDaniel/mason-tool-installer",
+})
+
+require("mason").setup({})
+require("mason-tool-installer").setup({
+  ensure_installed = {
+    "autopep8",
+    "clangd",
+    "clang-format",
+    "cortex-debug",
+    "cpptools",
+    "debugpy",
+    "lua-language-server",
+    "pyrefly",
+    "rust-analyzer",
+    "stylua",
+    "tombi",
   },
-  {
-    "mason-org/mason-lspconfig.nvim",
-    event = "VeryLazy",
-    dependencies = {
-      "mason-org/mason.nvim",
-      "neovim/nvim-lspconfig",
-    },
-    opts = {
-      automatic_enable = false,
-    },
-  },
-  {
-    "WhoIsSethDaniel/mason-tool-installer",
-    event = "VeryLazy",
-    dependencies = {
-      "mason-org/mason.nvim",
-      config = true,
-    },
-    opts = {
-      ensure_installed = {
-        "autopep8",
-        "clangd",
-        "clang-format",
-        "cortex-debug",
-        "cpptools",
-        "debugpy",
-        "lua-language-server",
-        "pyrefly",
-        "rust-analyzer",
-        "stylua",
-        "tombi",
-      },
-    },
-  },
-}
+})

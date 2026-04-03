@@ -1,10 +1,9 @@
-return {
-  "lukas-reineke/indent-blankline.nvim",
-  event = "VeryLazy",
-  main = "ibl",
-  opts = {
-    indent = {
-      char = "╎",
-    },
+vim.pack.add({
+  "https://github.com/lukas-reineke/indent-blankline.nvim.git",
+})
+
+require("ibl").setup({
+  indent = {
+    char = "╎",
   },
-}
+})

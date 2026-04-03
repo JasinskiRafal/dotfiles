@@ -1,26 +1,33 @@
-return {
-  {
-    "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
-    lazy = false,
-    opts = {
-      auto_install = true,
-      highlight = { enable = true },
-      indent = { enable = true },
-      ensure_installed = {
-        "c",
-        "cpp",
-        "lua",
-        "json",
-        "dockerfile",
-        "python",
-        "rust",
-      },
-      sync_install = true,
-    },
+vim.api.nvim_create_autocmd("PackChanged", {
+  callback = function(ev)
+    local name, kind = ev.data.spec.name, ev.data.kind
+    if name == "nvim-treesitter" and kind == "update" then
+      if not ev.data.active then
+        vim.cmd.packadd("nvim-treesitter")
+      end
+      vim.cmd("TSUpdate")
+    end
+  end,
+})
+
+vim.pack.add({
+  "https://github.com/nvim-treesitter/nvim-treesitter",
+  "https://github.com/nvim-treesitter/nvim-treesitter-context",
+})
+
+require("nvim-treesitter").setup({
+  auto_install = true,
+  highlight = { enable = true },
+  indent = { enable = true },
+  ensure_installed = {
+    "c",
+    "cpp",
+    "lua",
+    "json",
+    "dockerfile",
+    "python",
+    "rust",
   },
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    opts = {},
-  },
-}
+  sync_install = true,
+})
+require("treesitter-context")

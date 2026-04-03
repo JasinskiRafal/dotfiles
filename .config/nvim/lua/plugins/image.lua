@@ -1,9 +1,7 @@
-return {
-  "JasinskiRafal/viu.nvim",
-  event = "VeryLazy",
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "m00qek/baleia.nvim",
-  },
-  opts = {},
-}
+vim.pack.add({
+  "https://github.com/m00qek/baleia.nvim",
+  "https://github.com/JasinskiRafal/viu.nvim",
+})
+
+require("baleia").setup()
+require("viu").setup()

@@ -1,13 +1,11 @@
-return {
-  "NeogitOrg/neogit",
-  lazy = true,
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "sindrets/diffview.nvim",
-    "folke/snacks.nvim",
-  },
-  cmd = "Neogit",
-  keys = {
-    { "<leader>gg", "<cmd>Neogit<cr>", desc = "Show Neogit UI" },
-  },
-}
+vim.pack.add({
+  "https://github.com/sindrets/diffview.nvim",
+  "https://github.com/NeogitOrg/neogit",
+})
+
+require("diffview").setup({})
+require("neogit").setup({})
+
+vim.keymap.set("n", "<leader>gg", function()
+  vim.cmd("Neogit")
+end, { desc = "Show Neogit UI" })
