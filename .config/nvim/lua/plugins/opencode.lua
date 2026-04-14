@@ -31,6 +31,10 @@ vim.api.nvim_create_user_command("Opencode", function()
   require("opencode").toggle()
 end, { desc = "Toggle opencode terminal" })
 
+vim.api.nvim_create_user_command("OpencodeSession", function()
+  require("opencode").select_session()
+end, { desc = "Toggle opencode terminal" })
+
 vim.api.nvim_create_user_command("OpencodeStop", function()
   require("opencode").stop()
 end, { desc = "Close opencode terminal" })
