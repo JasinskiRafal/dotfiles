@@ -1,61 +1,15 @@
 vim.pack.add({
   "https://github.com/mfussenegger/nvim-dap",
   "https://github.com/nvim-neotest/nvim-nio",
-  "https://github.com/rcarriga/nvim-dap-ui",
   "https://github.com/jay-babu/mason-nvim-dap.nvim",
   "https://github.com/jedrzejboczar/nvim-dap-cortex-debug",
+  "https://github.com/igorlfs/nvim-dap-view.git",
 })
 
-require("dapui").setup({
-  icons = { expanded = "▾", collapsed = "▸", current_frame = "󰳟" },
-  controls = {
-    icons = {
-      pause = "",
-      play = "",
-      step_into = "󰆹",
-      step_over = "",
-      step_out = "󰆸",
-      terminate = "",
-      disconnect = "",
-    },
-  },
-  layouts = {
-    {
-      elements = {
-        {
-          id = "scopes",
-          size = 0.25,
-        },
-        {
-          id = "breakpoints",
-          size = 0.25,
-        },
-        {
-          id = "stacks",
-          size = 0.25,
-        },
-        {
-          id = "watches",
-          size = 0.25,
-        },
-      },
-      position = "left",
-      size = 80,
-    },
-    {
-      elements = {
-        {
-          id = "repl",
-          size = 0.6,
-        },
-        {
-          id = "console",
-          size = 0.4,
-        },
-      },
-      position = "right",
-      size = 80,
-    },
+require("dap-view").setup({
+  windows = {
+    size = 0.4,
+    position = "right",
   },
 })
 require("mason-nvim-dap").setup({
@@ -69,14 +23,14 @@ require("dap-cortex-debug").setup({})
 
 -- Attach listeners
 local dap = require("dap")
-local dapui = require("dapui")
+local dapview = require("dap-view")
 
 dap.listeners.before.attach.dapui_config = function()
-  dapui.open()
+  dapview.open()
 end
 
 dap.listeners.before.launch.dapui_config = function()
-  dapui.open()
+  dapview.open()
 end
 
 dap.listeners.after.launch.dapui_config = function()
@@ -151,7 +105,7 @@ end, { desc = "Terminate" })
 
 -- UI
 vim.keymap.set("n", "<leader>de", function()
-  require("dapui").close()
+  dapview.close()
   if next(Snacks.picker.get({ source = "explorer" })) == nil then
     Snacks.explorer()
   end
