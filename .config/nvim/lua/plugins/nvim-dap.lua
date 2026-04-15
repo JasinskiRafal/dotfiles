@@ -11,6 +11,17 @@ require("dap-view").setup({
     size = 0.4,
     position = "right",
   },
+  winbar = {
+    sections = {
+      "watches",
+      "scopes",
+      "exceptions",
+      "breakpoints",
+      "threads",
+      "repl",
+      "rtt",
+    },
+  },
 })
 require("mason-nvim-dap").setup({
   handlers = {
