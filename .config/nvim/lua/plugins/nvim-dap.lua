@@ -2,7 +2,7 @@ vim.pack.add({
   "https://github.com/mfussenegger/nvim-dap",
   "https://github.com/nvim-neotest/nvim-nio",
   "https://github.com/jay-babu/mason-nvim-dap.nvim",
-  "https://github.com/jedrzejboczar/nvim-dap-cortex-debug",
+  "https://github.com/JasinskiRafal/nvim-dap-cortex-debug.git",
   "https://github.com/igorlfs/nvim-dap-view.git",
 })
 
@@ -19,7 +19,9 @@ require("mason-nvim-dap").setup({
     end,
   },
 })
-require("dap-cortex-debug").setup({})
+require("dap-cortex-debug").setup({
+  dapui_rtt = false,
+})
 
 -- Attach listeners
 local dap = require("dap")
