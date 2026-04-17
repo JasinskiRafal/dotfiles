@@ -22,6 +22,7 @@ require("dap-view").setup({
       "rtt",
     },
   },
+  auto_toggle = true,
 })
 require("mason-nvim-dap").setup({
   handlers = {
@@ -35,22 +36,7 @@ require("dap-cortex-debug").setup({
 })
 
 -- Attach listeners
-local dap = require("dap")
 local dapview = require("dap-view")
-
-dap.listeners.before.attach.dapui_config = function()
-  dapview.open()
-end
-
-dap.listeners.before.launch.dapui_config = function()
-  dapview.open()
-end
-
-dap.listeners.after.launch.dapui_config = function()
-  if next(Snacks.picker.get({ source = "explorer" })) ~= nil then
-    Snacks.explorer()
-  end
-end
 
 vim.fn.sign_define("DapBreakpoint", { text = "🛑", texthl = "DiagnosticSignError", linehl = "", numhl = "" })
 
@@ -119,7 +105,4 @@ end, { desc = "Terminate" })
 -- UI
 vim.keymap.set("n", "<leader>de", function()
   dapview.close()
-  if next(Snacks.picker.get({ source = "explorer" })) == nil then
-    Snacks.explorer()
-  end
 end, { desc = "Exit debug ui" })
