@@ -3,10 +3,8 @@ vim.pack.add({
 })
 
 require("toggleterm").setup({
-  direction = "float",
-  float_opts = {
-    border = "curved",
-  },
+  direction = "vertical",
+  size = vim.o.columns * 0.4,
 })
 
 vim.keymap.set("n", "<leader>vt", ":ToggleTerm<CR>", { desc = "Toggle Terminal" })
