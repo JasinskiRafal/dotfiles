@@ -4,7 +4,10 @@ vim.pack.add({
 
 require("toggleterm").setup({
   direction = "vertical",
-  size = vim.o.columns * 0.4,
+  size = function()
+    return vim.o.columns * 0.4
+  end,
+  persist_size = false,
 })
 
 vim.keymap.set("n", "<leader>vt", ":ToggleTerm<CR>", { desc = "Toggle Terminal" })
