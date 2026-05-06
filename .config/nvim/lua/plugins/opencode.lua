@@ -38,3 +38,7 @@ end, { desc = "Toggle opencode terminal" })
 vim.api.nvim_create_user_command("OpencodeStop", function()
   require("opencode").stop()
 end, { desc = "Close opencode terminal" })
+
+vim.keymap.set({ "n" }, "<leader>oc", function()
+  require("opencode").toggle()
+end, { desc = "Breakpoint toggle" })
