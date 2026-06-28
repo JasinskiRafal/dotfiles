@@ -64,7 +64,7 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 
 -- Set the default shell to run to bash
-vim.opt.shell = "/bin/bash"
+vim.opt.shell = "/usr/bin/zsh"
 
 -- Enable local exrc files, such as .nvim.lua, .nvimrc, .exrc
 vim.opt.exrc = true
