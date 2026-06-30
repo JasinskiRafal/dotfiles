@@ -1,7 +1,4 @@
 vim.pack.add({
-  "https://github.com/nvim-neotest/nvim-nio",
-  "https://github.com/jay-babu/mason-nvim-dap.nvim",
-  "https://github.com/JasinskiRafal/nvim-dap-cortex-debug.git",
   "https://github.com/igorlfs/nvim-dap-view.git",
 })
 
@@ -23,20 +20,6 @@ require("dap-view").setup({
   },
   auto_toggle = true,
 })
-require("mason-nvim-dap").setup({
-  handlers = {
-    function(config)
-      require("mason-nvim-dap").default_setup(config)
-    end,
-  },
-})
-require("dap-cortex-debug").setup({
-  dapui_rtt = false,
-})
-
--- Attach listeners
-local dapview = require("dap-view")
-
 
 -- UI
 vim.keymap.set("n", "<leader>de", function()

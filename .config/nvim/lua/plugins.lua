@@ -3,10 +3,16 @@ require("plugins.plenary")
 require("plugins.mason")
 require("plugins.mini")
 require("plugins.fidget")
-require("plugins.nvim-dap")
 require("plugins.snacks")
 require("plugins.treesitter")
 require("plugins.telescope")
+
+-- Debug
+require("plugins.nvim-dap")
+require("plugins.nvim-dap-cortex-debug")
+require("plugins.nvim-dap-view")
+require("plugins.nvim-nio")
+require("plugins.mason-nvim-dap")
 
 -- All plugins
 require("plugins.blink-cmp")
