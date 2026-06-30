@@ -9,8 +9,8 @@ require("plugins.telescope")
 
 -- Debug
 require("plugins.nvim-dap")
-require("plugins.nvim-dap-cortex-debug")
 require("plugins.nvim-dap-view")
+require("plugins.nvim-dap-cortex-debug")
 require("plugins.nvim-nio")
 require("plugins.mason-nvim-dap")
 
