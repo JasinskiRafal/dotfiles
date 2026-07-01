@@ -27,10 +27,6 @@ bindkey ";5D" backward-word
 # If not running interactively, don't do anything
 [[ -o interactive ]] || return
 
-# Aliases
-alias ls='ls --color=auto'
-alias grep='grep --color=auto'
-
 source "$HOME/.zshaliases"
 source "$HOME/.zshenv"
 
