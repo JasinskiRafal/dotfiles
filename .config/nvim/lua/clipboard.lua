@@ -1,14 +1,15 @@
 vim.opt.clipboard = "unnamedplus"
 
+local osc52 = require("vim.ui.clipboard.osc52")
+
 vim.g.clipboard = {
-  name = "xclip",
+  name = "OSC 52",
   copy = {
-    ["+"] = "xclip -selection clipboard",
-    ["*"] = "xclip -selection primary",
+    ["+"] = osc52.copy("+"),
+    ["*"] = osc52.copy("*"),
   },
   paste = {
-    ["+"] = "xclip -selection clipboard -o",
-    ["*"] = "xclip -selection primary -o",
+    ["+"] = osc52.paste("+"),
+    ["*"] = osc52.paste("*"),
   },
-  cache_enabled = true,
 }
