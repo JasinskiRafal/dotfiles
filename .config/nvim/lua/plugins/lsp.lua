@@ -4,3 +4,11 @@ vim.pack.add({
 })
 
 require("mason-lspconfig").setup({})
+
+vim.lsp.config("clangd", {
+  cmd = {
+    "clangd",
+    "--query-driver=/usr/bin/aarch64-linux-gnu-*,/usr/bin/*g++*,/usr/bin/*gcc*,/usr/bin/*clang*",
+  },
+})
+
