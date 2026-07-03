@@ -1,15 +1,9 @@
-vim.opt.clipboard = "unnamedplus"
-
-local osc52 = require("vim.ui.clipboard.osc52")
-
-vim.g.clipboard = {
-  name = "OSC 52",
-  copy = {
-    ["+"] = osc52.copy("+"),
-    ["*"] = osc52.copy("*"),
-  },
-  paste = {
-    ["+"] = osc52.paste("+"),
-    ["*"] = osc52.paste("*"),
-  },
-}
+-- Clipboard integration intentionally disabled.
+--
+-- Neovim uses only its internal registers. OSC52 paste (the read query
+-- `ESC]52;c;?`) blocked over SSH waiting for the local terminal to answer,
+-- causing long hangs / lost pastes. We now rely on the terminal itself:
+--   Copy  = select text with the mouse (terminal puts it on the clipboard)
+--   Paste = terminal paste, e.g. Ctrl/Cmd+Shift+V (bracketed paste)
+--
+-- No `vim.g.clipboard` and no `clipboard = "unnamedplus"` on purpose.
