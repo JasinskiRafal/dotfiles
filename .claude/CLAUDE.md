@@ -21,6 +21,11 @@ task reaches a point where committing, branching, or merging would make sense,
 **stop and tell the human what you'd suggest** — then let them run it. State the
 exact commands you'd recommend so they can copy them, but do not execute them.
 
+## Never read secrets
+Never read any secrets or API keys, if read by accident, 
+always inform the user about it.
+SUPER IMPORTANT! Never print them directly anywhere!
+
 ## Testing is opt-in
 
 Do **not** assume test-driven development or write tests by default. This
