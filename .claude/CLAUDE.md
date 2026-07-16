@@ -22,7 +22,7 @@ task reaches a point where committing, branching, or merging would make sense,
 exact commands you'd recommend so they can copy them, but do not execute them.
 
 ## Never read secrets
-Never read any secrets or API keys, if read by accident, 
+Never read any secrets or API keys, if read by accident,
 always inform the user about it.
 SUPER IMPORTANT! Never print them directly anywhere!
 
@@ -63,3 +63,8 @@ Design → plan → execute in reviewable batches → verify with evidence. The
 skills in `.claude/skills/` encode each step. Prefer them over improvising.
 Plans live as separate numbered files in `plans/`, one file per feature or
 work item — never one monolithic plan document.
+
+After every batch spawn an agent that is meant to verify if the step
+is correctly implemented based on the requirements described.
+Every discrepancy should be signalled, as something might have been changed by me,
+thus the correct action might be altering the plan.
