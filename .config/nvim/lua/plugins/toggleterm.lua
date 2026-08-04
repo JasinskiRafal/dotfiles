@@ -11,3 +11,4 @@ require("toggleterm").setup({
 })
 
 vim.keymap.set("n", "<leader>vt", ":ToggleTerm<CR>", { desc = "Toggle Terminal" })
+vim.keymap.set("n", "<leader>vT", ":ToggleTerm direction=float<CR>", { desc = "Toggle Terminal" })
