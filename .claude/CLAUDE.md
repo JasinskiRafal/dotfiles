@@ -42,8 +42,16 @@ verify, review, debug, tdd). When a step is finished:
 1. **Stop.** Do not begin the next phase on your own initiative.
 2. **Signal completion clearly** — e.g. "Planning complete — plans/007-foo.md".
 3. State what the next step would be and the command that runs it (e.g.
-   "Next: run `/executing-plans plans/007-foo.md`"), but do NOT run it yourself.
+   "Next: run `/execute plans/007-foo.md`"), but do NOT run it yourself.
 4. Wait for the human to invoke the next command.
+
+Why this is strict: each command sets its own model — `/plan` runs on Opus,
+`/execute` on Sonnet. Skills that get auto-loaded mid-session do NOT switch the
+model; they run on whatever model the session is already on. So if you rolled
+from one phase into the next on your own, you'd run it on the wrong model
+(executing on Opus = wasted budget; planning on Sonnet = worse reasoning).
+Requiring the human to start each step via its command is exactly what keeps the
+model correct. **Never cross a phase boundary without the human.**
 
 The one exception: if the human asks you to elaborate, refine, or keep working
 *within* the current step, continue in that step. The stop applies only to
