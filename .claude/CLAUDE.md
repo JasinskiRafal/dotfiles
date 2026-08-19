@@ -111,7 +111,15 @@ interface between them:
 The single-step commands remain: `/brainstorm`, `/plan`, `/execute`, `/review`,
 `/verify`, `/debug`, `/tdd`. Use `/execute` over `/implement-plan` when you want
 to watch the work batch by batch; `/implement-plan` runs unattended to the end of
-the plan or to a hard halt.
+the plan, or to a halt only you can clear.
+
+**A reached bound is not a halt.** A review that will not come clean escalates —
+diagnose, re-scope, re-adjudicate, amend the plan — and a stale plan is amended
+rather than abandoned. What stops a run is a progress ledger: two consecutive
+rounds that resolve nothing, change no finding, touch no file and produce no new
+output. The halts that remain are the ones no further agent work can clear: a new
+dependency, an unauthorized test, and a decision that would change what gets
+built.
 
 Plan numbers are `max + 1` over `plans/*.md` — never the first gap, never reused,
 and a collision is a halt rather than a second file sharing a number.
@@ -120,3 +128,9 @@ After every batch spawn an agent that is meant to verify if the step
 is correctly implemented based on the requirements described.
 Every discrepancy should be signalled, as something might have been changed by me,
 thus the correct action might be altering the plan.
+
+The loop alters the plan itself rather than stopping: a delegated `planner` in amend
+mode, inside a stated boundary — reconcile the plan with the repository, change no
+design decision, add no scope — and every amendment is reported to me, because I
+approved the plan I read and an amended task is one I have not. A discrepancy stops
+the run only when reconciling it would change what gets built.

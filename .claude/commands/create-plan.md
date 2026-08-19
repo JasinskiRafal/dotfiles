@@ -96,7 +96,8 @@ with a lifetime. `plan-reviewer` checks:
 - **task ordering** — does any task depend on a later one;
 - **verifiability** — every task states a command and an expected result, and none is a
   hand-wave. This is the check that pays for itself: the implementer runs those commands, so
-  an unrunnable step becomes a halt after work has been done against it;
+  an unrunnable step costs a mid-run plan amendment at best, and work done against a step
+  nobody could check at worst;
 - **missing constraints** — target, dependencies, the project rules the work must satisfy;
 - **scope creep** — anything beyond the agreed design, and anything in `## Out of scope`
   contradicted by a task;
@@ -115,25 +116,53 @@ violate. Both belong to `/implement-plan`, after the plan is executed.
 Record that they were skipped and why. Do not invent a rule citation for prose, and do not
 hand a document to an agent that will look for off-by-one errors in it.
 
-## 8. Adjudicate, then refine
+## 8. Adjudicate, then refine — and escalate rather than stop
 
 Accept findings that are technically justified and inside the agreed design; reject the rest
 with a one-line rationale that goes in the report. Send accepted findings to a **fresh
 planner** in refine mode — never patch the plan yourself, and never reuse the `plan-reviewer`
 that produced the findings.
 
-**Bounded at 3 iterations.** Exhausting it is a halt reporting the unresolved findings.
+The refine loop gets **3 rounds** of exactly that shape. Reaching the third without a clean
+review ends *that approach*, not this command. Take the next unused rung below, then continue
+with a fresh budget of 3:
 
-## 9. Halt conditions
+1. **Re-adjudicate.** Read the surviving findings yourself. A finding that has outlived three
+   refine passes is often one the reviewer is wrong about — reject it, with the rationale in
+   the report.
+2. **Re-scope.** One finding per `planner`, instead of a batch of them to one agent. Findings
+   that were undoing each other converge separately.
+3. **Inspect.** Spawn a fresh `brainstormer` on the contested point. A plan review that will
+   not settle is frequently a question the repository can answer that nobody asked it.
+4. **Tighten the design record.** If the plan keeps failing review in the same place, the
+   ambiguity is usually in §3's record rather than in the plan. Restate the agreed design and
+   spawn a fresh `planner` against the restatement. Restating what was agreed is allowed;
+   deciding something new is a halt under §9.
+
+Each rung is used at most once. After every round, record whether it **made progress** — a
+finding resolved or rejected, the set of open findings changed, the plan file actually edited,
+or a repository fact newly established. A round with none of those is **unproductive**: one
+unproductive round forces the next rung immediately, and **two consecutive unproductive rounds
+end the command**, reporting every rung tried and every finding left standing.
+
+That ledger, not a counter reaching three, is what stops this loop. A bound being reached is a
+signal to change the approach.
+
+## 9. Halt conditions — the ones only the human can resolve
 
 - A **shape-changing decision** the human has not settled and inspection cannot.
 - A **plan-number collision** at the number chosen in §4.
-- The plan review **not clean after 3 refine iterations**.
 - The idea **needs a new third-party dependency**. Stop and ask, with a concrete usage
   example and an honest cost/benefit against the dependency-free alternative, before a plan
   is written around it.
 - The idea turns out to need **more than one plan file**. Say so and let the human decide
   the split rather than writing a monolith.
+- The plan review has **run out of moves** — two consecutive unproductive rounds under §8.
+  The first one already forced a new rung, so a second means the approach changed and still
+  moved nothing. Report the unresolved findings and what each rung tried.
+
+**A plan review that is merely not clean yet is not on this list.** Reaching the refine bound
+changes the approach (§8); it does not end the command.
 
 On any halt: report what was agreed so far, the halt reason, and precisely what is needed.
 A halt is a successful outcome of this command, not a failure of it.
@@ -144,7 +173,8 @@ A halt is a successful outcome of this command, not a failure of it.
 - the agreed design, in a few sentences;
 - **which decisions were the human's and which came from inspection**;
 - the out-of-scope boundaries;
-- the review history and the refine-iteration count;
+- the review history and the refine-round count, plus any escalation rungs taken from §8 and
+  the progress ledger behind them;
 - findings **rejected**, each with its rationale;
 - the plan's own `## Open questions`, surfaced rather than buried in the file.
 

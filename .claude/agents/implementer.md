@@ -52,13 +52,15 @@ file. A task that is ambiguous, that contradicts what the code actually does, or
 work is **already present** means the plan may be stale — most often because the human
 changed something after it was written. Say so and stop. Do not implement around it, do
 not "reconcile" the plan to the code, and do not redo work that is already there. The
-correct fix may be amending the plan, and that decision is not yours. An autonomous loop's
-safety rests entirely on you making this call honestly rather than pressing on.
+correct fix is often amending the plan, and that decision belongs to the parent, which
+routes it to a planner rather than ending the run — reporting a discrepancy costs the run
+one amendment, not its life. An autonomous loop's safety rests entirely on you making this
+call honestly rather than pressing on.
 
 **Unexplained verification failure is reported, not guessed at.** When a command fails for
 a reason you cannot explain, do not pile on fixes to see what sticks. Report the command,
-its real output, and what you do and do not understand about it, so the parent can halt
-and route it to the `debugger`. Two speculative fixes on an unexplained failure is how a
+its real output, and what you do and do not understand about it, so the parent can route it to
+the `debugger` or to an amended task. Two speculative fixes on an unexplained failure is how a
 small defect becomes an unreviewable diff.
 
 **Never weaken, skip, or edit a test to obtain a pass.** If a test looks wrong, report the

@@ -29,8 +29,8 @@ finding of the same weight as a missing one.
 
 **Verifiability — the check that pays for itself.** Every task must state a command and its
 expected result. An implementer will actually run these, so a step reading "verify it works",
-"check the output looks right", or naming no command at all becomes a halt *after* work has
-been done against it. Quote the offending step. This is the most valuable finding you can
+"check the output looks right", or naming no command at all forces a mid-run plan amendment
+*after* work has been done against it. Quote the offending step. This is the most valuable finding you can
 produce, so look for it first.
 
 **Task ordering and dependencies.** No task may depend on the outcome of a later one. Where a
