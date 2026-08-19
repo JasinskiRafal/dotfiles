@@ -1,0 +1,6 @@
+interface:
+  display_name: "Implement Plan"
+  short_description: "Drive a reviewed plan fully to done"
+  default_prompt: "Use $implement-plan to implement this plan through reviewed batches and a closing refactor-and-improvement gate."
+policy:
+  allow_implicit_invocation: false
