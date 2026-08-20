@@ -7,11 +7,13 @@ Read-only Git inspection is always allowed: `git status`, `git diff`, `git log`,
 show-ref`. Use these commands only to understand repository state and review
 work already present.
 
-The additive tier, `git add` and `git commit`, is reserved for one explicit
-workflow: the parent orchestrator running `$implement-plan --commit`. That
-carve-out applies only when all of these conditions hold:
+The additive tier, `git add` and `git commit`, is reserved for two explicit
+invocations of the same workflow: the parent orchestrator running
+`$implement-plan --commit` or `$implement-plan-commit`. That carve-out applies
+only when all of these conditions hold:
 
-- the human supplied `--commit` on that invocation;
+- the human supplied `--commit`, or explicitly invoked
+  `$implement-plan-commit`;
 - the working tree was clean before the first batch and HEAD was not the
   repository's default branch;
 - the batch has completed its verification and independent reviews cleanly,
@@ -24,7 +26,8 @@ carve-out applies only when all of these conditions hold:
 Spawned agents may run read-only Git inspection only. They may never execute a
 Git command that changes repository, index, configuration, refs, or worktree
 state, including staging or committing. Without `--commit`, the parent may not
-stage or commit either. A repository-level `AGENTS.md`, policy, or permission
+stage or commit either, unless the human explicitly invoked
+`$implement-plan-commit`. A repository-level `AGENTS.md`, policy, or permission
 rule that forbids agent commits overrides this global carve-out.
 
 All destructive, history-rewriting, remote, branch, and worktree operations
@@ -58,11 +61,12 @@ the end of a phase, stop, clearly signal completion, suggest the next skill,
 and wait for the human to invoke it. During guided execution, stop after every
 reviewable batch so the human can inspect and commit it.
 
-Two explicit skills provide delegated orchestration around the same phases:
+Three explicit skills provide delegated orchestration around the same phases:
 
 ```text
-$create-plan     brainstorm -> plan -> review the plan -> refine -> hand over
-$implement-plan  implement -> review -> refine -> next batch -> closing gate
+$create-plan            brainstorm -> plan -> review the plan -> refine -> hand over
+$implement-plan         implement -> review -> refine -> next batch -> closing gate
+$implement-plan-commit  same as $implement-plan --commit; commits are mandatory
 ```
 
 `$create-plan` is the interactive front half. It delegates repository
@@ -73,8 +77,10 @@ the reviewed plan.
 `$implement-plan` is the unattended back half. It delegates every implementation
 and review assignment to a fresh specialized agent and proceeds until the plan
 is complete or a hard halt condition occurs. It does not stop between batches.
-Only an explicit invocation selects either orchestrator; ordinary planning and
-implementation requests continue to use the guided workflow.
+`$implement-plan-commit` is its commit-on wrapper for invocations where the
+human does not want to remember the optional flag. Only an explicit invocation
+selects an orchestrator; ordinary planning and implementation requests continue
+to use the guided workflow.
 
 Naming an individual phase skill still selects only that phase. A request to
 continue or refine work within the current phase may proceed, but it does not
@@ -83,10 +89,10 @@ authorize rolling into another phase in the current agent context.
 ### Delegation crosses phase boundaries safely
 
 Phase boundaries protect role and model separation. A delegated subagent starts
-a fresh context with its own role, model, and sandbox, so `$create-plan` and
-`$implement-plan` may cross boundaries by delegation. This does not authorize
-the parent to perform a delegated phase itself or let an implementer review its
-own work.
+a fresh context with its own role, model, and sandbox, so `$create-plan`,
+`$implement-plan`, and `$implement-plan-commit` may cross boundaries by
+delegation. This does not authorize the parent to perform a delegated phase
+itself or let an implementer review its own work.
 
 ## Plans and batches
 

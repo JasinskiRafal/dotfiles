@@ -99,14 +99,15 @@ Report:
 - rejected findings and rationale;
 - every Open question recorded in the plan.
 
-Offer `$implement-plan <plan-path>`, then stop so the human can read the plan.
-Implementation may begin only from a later explicit `$implement-plan`
-invocation; generic consent inside the `$create-plan` run does not cross that
-boundary.
+Offer `$implement-plan-commit <plan-path>` for execution with provisional
+commits, or `$implement-plan <plan-path>` for execution without Git mutation.
+Then stop so the human can read the plan. Implementation may begin only from a
+later explicit invocation of the chosen skill; generic consent inside the
+`$create-plan` run does not cross that boundary.
 
-If offering `$implement-plan --commit`, explain that its clean-tree precondition
-requires the human to commit the new plan first. Give appropriate Git commands
-as text only; never execute them.
+Explain that `$implement-plan-commit` has a clean-tree precondition, so the human
+must commit the new plan first. Give appropriate Git commands as text only;
+never execute them.
 
 ## Hard constraints
 
