@@ -25,6 +25,15 @@ Critique it against the repository before editing. Resolve repository-answerable
 questions by inspection. Halt rather than guess when an ambiguity, stale path,
 contradiction, or Open question would change a task.
 
+Read all applicable `AGENTS.md` files before applying workflow defaults. Treat
+the most specific project instructions as authoritative for customizable
+details such as naming, formatting, commands, commit messages, and review
+conventions. Adapt and continue when they specialize or replace a default in
+this skill; that difference alone is not a plan/repository discrepancy or halt
+condition. Preserve higher-priority instructions, permission and safety
+boundaries, the human's current request, and this skill's non-customizable role
+separation and authorization constraints.
+
 Record the initial working-tree paths so pre-existing human changes remain
 distinguishable from this run.
 
@@ -103,7 +112,10 @@ with `--commit`:
 1. Stage exactly the implementer-reported paths plus the plan file when its
    progress markers changed.
 2. Inspect the staged path list and halt if it contains any other path.
-3. Commit with exactly `plan NNN batch M: <task heading>` and no body or trailer.
+3. Follow the most specific applicable repository instructions for the commit
+   message. If none define a convention, use exactly
+   `plan NNN batch M: <task heading>` with no body or trailer. A local
+   commit-message convention replaces this fallback and must not halt the run.
 4. Record the short commit ID for the final report.
 
 These commits are provisional review checkpoints meant for the human to squash.
@@ -183,8 +195,9 @@ in-scope refactor is needed.
 
 If closing-gate fixes or refactors occur under `--commit`, accumulate their
 authoritative reported paths. After the gate is clean, stage only that union and
-create one provisional `plan NNN gate: closing remediation` commit. Include it
-in the commit list.
+create one provisional commit using the most specific applicable repository
+commit-message convention. If none exists, use
+`plan NNN gate: closing remediation`. Include it in the commit list.
 
 Claim completion only when the verifier's evidence supports the plan and the
 whole-plan reviewer is clean. Deferred checks remain explicitly unverified.

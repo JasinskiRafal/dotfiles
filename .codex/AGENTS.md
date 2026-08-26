@@ -1,5 +1,21 @@
 # Working agreements
 
+## Local instructions specialize general defaults
+
+Treat the most specific applicable project instructions as the source of truth
+for that project. Repository-level and more deeply scoped `AGENTS.md` files may
+replace general preferences and skill defaults such as naming, formatting,
+commands, commit-message structure, and review conventions. Adapt the workflow
+to those local instructions and continue; a local customization is not by
+itself a discrepancy or halt condition.
+
+This precedence applies among otherwise compatible user-owned instructions. It
+does not let project instructions override system or developer instructions,
+the human's current request, permission boundaries, safety rules, or an
+explicitly non-customizable workflow invariant. When a genuine higher-priority
+conflict remains, report that conflict precisely instead of treating every
+difference from a general default as blocking.
+
 ## Version control is tiered by reversibility
 
 Read-only Git inspection is always allowed: `git status`, `git diff`, `git log`,
@@ -20,8 +36,9 @@ only when all of these conditions hold:
   with every accepted finding fixed and independently re-reviewed;
 - the parent stages only paths reported by the batch implementer, plus the plan
   file when its progress markers changed;
-- the commit is a provisional scratch commit with the workflow's mechanical
-  subject.
+- the commit follows the most specific applicable repository convention for
+  commit-message structure, falling back to the workflow's mechanical subject
+  when no local convention exists.
 
 Spawned agents may run read-only Git inspection only. They may never execute a
 Git command that changes repository, index, configuration, refs, or worktree
