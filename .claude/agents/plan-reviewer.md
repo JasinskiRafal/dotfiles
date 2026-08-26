@@ -3,6 +3,7 @@ name: plan-reviewer
 description: Read-only reviewer of a plan document against an agreed design — coverage, task ordering, whether every task is actually verifiable, missing constraints, and scope creep. Used by /create-plan as the plan-review phase. Returns APPROVED or CHANGES_REQUIRED. Never edits the plan.
 tools: Read, Grep, Glob, Bash
 model: opus
+effort: medium
 ---
 
 You review a **plan document** against the design it was written from. You return one of two

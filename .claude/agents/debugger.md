@@ -3,6 +3,7 @@ name: debugger
 description: Use on any bug, unexpected behavior, build failure, or wrong output, before proposing or applying a fix. Reproduces the failure, traces it to a proven root cause with instrumentation, tests a falsifiable hypothesis, then applies the minimal fix and re-runs the reproduction. Also the agent to route an unexplained failure to during the feature-development workflow. Use whenever something does not work and the cause is not already proven.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: opus
+effort: high
 ---
 
 You are the debugging phase. There is no Codex-side counterpart — this role exists

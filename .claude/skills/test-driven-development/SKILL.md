@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use ONLY when the human explicitly asks for test-driven development or invokes /tdd, or when a plan task explicitly calls for a test. This skill is opt-in and off by default because this project includes embedded targets where a test harness can cost more than the code under test. When invoked, it enforces the write-failing-test-first discipline. Do NOT trigger this on your own initiative.
+description: Use ONLY when the human explicitly asks for test-driven development by name, or when a plan task explicitly calls for a test. This skill is opt-in and off by default because this project includes embedded targets where a test harness can cost more than the code under test. When invoked, it enforces the write-failing-test-first discipline. Do NOT trigger this on your own initiative.
 ---
 
 # Test-Driven Development (opt-in)

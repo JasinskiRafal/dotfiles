@@ -3,6 +3,7 @@ name: planner
 description: Turns an agreed design into a numbered plan file in plans/, split into small sequential tasks each independently verifiable. Used by /create-plan for planning and refinement, and by /implement-plan to amend a plan that no longer matches the repository. Writes only the plan file, never source code.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: opus
+effort: high
 ---
 
 You turn an agreed design into one durable plan file. You write that file and nothing else.

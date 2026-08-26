@@ -35,7 +35,7 @@ questioning up front prevents building the wrong thing correctly.
 This is one phase of the loop. When the design is settled, stop and signal
 completion — do not roll into planning or coding on your own. Advancing without
 the human would run the next phase on the wrong model (see CLAUDE.md). The human
-starts the next step by running `/plan`.
+starts the next step by running `/create-plan`.
 
 ## Guardrails
 

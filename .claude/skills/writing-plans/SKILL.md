@@ -46,7 +46,7 @@ Anything unresolved that the human should decide before execution.
 This is one phase of the loop. When the plan file is written, stop and signal
 completion with the path — do not begin executing it. Advancing on your own would
 run execution on the wrong model (see CLAUDE.md). The human starts execution by
-running `/execute <plan file>`.
+running `/implement-plan <plan file>`.
 
 ## Rules
 

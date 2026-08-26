@@ -29,7 +29,7 @@ conditions at once:
 
 - the human passed the explicit **`--commit`** flag on that invocation;
 - the commit happens **after** the batch's reviews came back clean, never before;
-- it commits only the paths the implementer reported, plus the plan file;
+- it commits only the paths that batch's changed-file list names, plus the plan file;
 - the commits are **provisional scratch commits meant to be squashed** — a
   mechanical `plan NNN batch M: <task heading>` subject, no body, no trailers.
 
@@ -53,39 +53,52 @@ SUPER IMPORTANT! Never print them directly anywhere!
 Do **not** assume test-driven development or write tests by default. This
 codebase might includes embedded targets where a test harness can be larger and more
 expensive than the code under test. Write tests only when the human explicitly
-asks (e.g. invokes the `test-driven-development` skill or the `/tdd` command),
-or when a plan task explicitly calls for them.
+asks (e.g. invokes the `test-driven-development` skill by name), or when a plan
+task explicitly calls for them.
 
 ## Step boundaries — signal completion, never auto-advance
 
-Each command does exactly ONE step of the loop (brainstorm, plan, execute,
-verify, review, debug, tdd). When a step is finished:
+There are exactly three commands: `/create-plan`, `/implement-plan`, `/debug`.
+Each is one step. When a step is finished:
 
 1. **Stop.** Do not begin the next phase on your own initiative.
 2. **Signal completion clearly** — e.g. "Planning complete — plans/007-foo.md".
 3. State what the next step would be and the command that runs it (e.g.
-   "Next: run `/execute plans/007-foo.md`"), but do NOT run it yourself.
+   "Next: run `/implement-plan plans/007-foo.md`"), but do NOT run it yourself.
 4. Wait for the human to invoke the next command.
 
-Why this is strict: each command sets its own model — `/plan` runs on Opus,
-`/execute` on Sonnet. Skills that get auto-loaded mid-session do NOT switch the
-model; they run on whatever model the session is already on. So if you rolled
-from one phase into the next on your own, you'd run it on the wrong model
-(executing on Opus = wasted budget; planning on Sonnet = worse reasoning).
-Requiring the human to start each step via its command is exactly what keeps the
-model correct. **Never cross a phase boundary without the human.**
+Why this is strict: each command pins its own model and effort in its own
+frontmatter — `/create-plan` and `/implement-plan` on Opus, `/debug` on Sonnet.
+Skills that get auto-loaded mid-session do NOT switch the model; they run on
+whatever model the session is already on. So if you rolled from one phase into
+the next on your own, you'd run it on whatever model the session happened to be
+on rather than the one chosen for that phase. Requiring the human to start each
+step via its command is exactly what keeps the model correct. **Never cross a
+phase boundary without the human.**
 
 The one exception: if the human asks you to elaborate, refine, or keep working
 *within* the current step, continue in that step. The stop applies only to
 moving on to the next step.
 
-### Delegation crosses a boundary safely; rolling forward does not
+### A pinned model crosses a boundary safely; rolling forward does not
 
-The rule protects the *model*, not the ceremony. A subagent pins its own model in
-its own frontmatter, so spawning one runs that phase on the right model whatever
-the session is on. That is why `/create-plan` and `/implement-plan` may run
-several phases in one invocation: they never do a phase themselves, they delegate
-each one to a fresh agent and adjudicate the result.
+The rule protects the *model*, not the ceremony. Two things pin a model, and both
+count: a subagent pins one in its own frontmatter, and **a slash command pins one
+in its own frontmatter too**. Either way the phase runs on a model chosen for it
+rather than on whatever the session happened to be on.
+
+That is why `/create-plan` and `/implement-plan` may run several phases in one
+invocation, and why they do it differently. `/create-plan` delegates every
+phase — brainstormer, planner, plan-reviewer — and adjudicates the results.
+`/implement-plan` delegates only what it cannot do itself, which is review:
+a reviewer that wrote the code is not an independent reviewer. It writes the
+code itself, on the model and effort its own frontmatter pins, because handing
+each batch to a cold implementer and paying to rebuild the context was the single
+biggest cost in the loop.
+
+Every agent and every command in this workflow states both `model:` and `effort:`
+explicitly. Neither is left to inherit the session's, and neither should be added
+without setting both.
 
 This licenses nothing in-session. Continuing into the next phase yourself, on the
 current session's model, is still forbidden — and both orchestrators still stop
@@ -108,10 +121,14 @@ interface between them:
 /implement-plan  implement  → review → refine → next batch → closing gate
 ```
 
-The single-step commands remain: `/brainstorm`, `/plan`, `/execute`, `/review`,
-`/verify`, `/debug`, `/tdd`. Use `/execute` over `/implement-plan` when you want
-to watch the work batch by batch; `/implement-plan` runs unattended to the end of
-the plan, or to a halt only you can clear.
+`/debug` is the third and last command: a single root-cause pass on a failure,
+used on its own or when a run hands you something it could not explain.
+
+There is deliberately nothing else. The per-phase commands that used to exist
+(`/brainstorm`, `/plan`, `/execute`, `/review`, `/verify`, `/tdd`) are gone —
+each phase now lives inside one of the two entry points, or in the skill that
+encodes it, which you may still invoke by name when you want that discipline
+without the whole loop.
 
 **A reached bound is not a halt.** A review that will not come clean escalates —
 diagnose, re-scope, re-adjudicate, amend the plan — and a stale plan is amended

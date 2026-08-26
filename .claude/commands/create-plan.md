@@ -2,6 +2,7 @@
 description: Brainstorm a rough idea into an agreed design, then write and review a numbered plan in plans/
 argument-hint: <the idea, in your own words>
 model: opus
+effort: medium
 ---
 Turn the idea at the end of this file into an agreed design, then into a reviewed plan file
 under `plans/`. You orchestrate: you delegate the design, the writing, and the review, and
@@ -123,18 +124,16 @@ with a one-line rationale that goes in the report. Send accepted findings to a *
 planner** in refine mode — never patch the plan yourself, and never reuse the `plan-reviewer`
 that produced the findings.
 
-The refine loop gets **3 rounds** of exactly that shape. Reaching the third without a clean
+The refine loop gets **2 rounds** of exactly that shape. Reaching the second without a clean
 review ends *that approach*, not this command. Take the next unused rung below, then continue
-with a fresh budget of 3:
+with a fresh budget of 2:
 
-1. **Re-adjudicate.** Read the surviving findings yourself. A finding that has outlived three
-   refine passes is often one the reviewer is wrong about — reject it, with the rationale in
-   the report.
-2. **Re-scope.** One finding per `planner`, instead of a batch of them to one agent. Findings
-   that were undoing each other converge separately.
-3. **Inspect.** Spawn a fresh `brainstormer` on the contested point. A plan review that will
-   not settle is frequently a question the repository can answer that nobody asked it.
-4. **Tighten the design record.** If the plan keeps failing review in the same place, the
+1. **Re-adjudicate, and inspect if the point is contested.** Read the surviving findings
+   yourself. A finding that has outlived two refine passes is often one the reviewer is wrong
+   about — reject it, with the rationale in the report. If instead the two of you disagree
+   about a fact, spawn a fresh `brainstormer` on that point: a plan review that will not
+   settle is frequently a question the repository can answer that nobody asked it.
+2. **Tighten the design record.** If the plan keeps failing review in the same place, the
    ambiguity is usually in §3's record rather than in the plan. Restate the agreed design and
    spawn a fresh `planner` against the restatement. Restating what was agreed is allowed;
    deciding something new is a halt under §9.
@@ -145,7 +144,7 @@ or a repository fact newly established. A round with none of those is **unproduc
 unproductive round forces the next rung immediately, and **two consecutive unproductive rounds
 end the command**, reporting every rung tried and every finding left standing.
 
-That ledger, not a counter reaching three, is what stops this loop. A bound being reached is a
+That ledger, not a counter reaching two, is what stops this loop. A bound being reached is a
 signal to change the approach.
 
 ## 9. Halt conditions — the ones only the human can resolve
@@ -215,10 +214,12 @@ straight away.
 ## 13. Why running several phases unattended does not break the step-boundary rule
 
 `~/.claude/CLAUDE.md` requires the human to start each phase because each belongs on a
-different model, and rolling forward inside one session would run the next phase on the
-current session's model. Delegation does not have that problem: `brainstormer`, `planner`
-and `plan-reviewer` each pin their own model in their own frontmatter, so every phase runs
-on the right one whatever this session is.
+deliberately chosen model, and rolling forward inside one session would run the next phase on
+whatever model the session happened to be on. Delegation does not have that problem:
+`brainstormer`, `planner` and `plan-reviewer` each pin their own **model and effort** in their
+own frontmatter, so every phase runs on the right one whatever this session is. Unlike
+`/implement-plan`, this command delegates every phase — there is no artifact here it could
+usefully write itself, and the plan is the one document its reviewer must not have authored.
 
 The offer in §11 is a separate, explicit consent point, taken after the human has seen the
 plan. Nothing here licenses crossing a phase boundary in-session without delegating.

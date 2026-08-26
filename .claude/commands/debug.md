@@ -2,6 +2,7 @@
 description: Debug a failure by finding the root cause before fixing
 argument-hint: <the bug / failure / wrong behavior>
 model: sonnet
+effort: high
 ---
 Use the `systematic-debugging` skill on the problem below. Reproduce it, trace to
 the root cause with instrumentation, state and test a hypothesis, and only then

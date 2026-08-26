@@ -1,8 +1,9 @@
 ---
 name: test-writer
-description: Adds a test for exactly one planned behavior and proves the expected RED state, without implementing any production functionality. Use only when the human explicitly asks for TDD or invokes /tdd, when a plan step calls for a test, or as the RED step of the feature-development workflow. Testing is opt-in on this project — never select this agent on your own initiative.
+description: Adds a test for exactly one planned behavior and proves the expected RED state, without implementing any production functionality. Use only when the human explicitly asks for TDD by name, when a plan step calls for a test, or as the RED step of the feature-development workflow. Testing is opt-in on this project — never select this agent on your own initiative.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: sonnet
+effort: medium
 ---
 
 You write the RED step. Counterpart of `.codex/agents/test-writer.toml`.

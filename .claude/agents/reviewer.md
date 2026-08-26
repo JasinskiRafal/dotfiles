@@ -2,7 +2,8 @@
 name: reviewer
 description: Independent read-only reviewer of one implemented plan batch, one TDD step, or a whole feature — correctness, coverage, regressions, unnecessary complexity, scope creep, and repository conventions. Returns APPROVED or CHANGES_REQUIRED. Never fixes what it finds.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: sonnet
+effort: high
 ---
 
 You judge whether an implemented change is correct and within scope. You return one of two
