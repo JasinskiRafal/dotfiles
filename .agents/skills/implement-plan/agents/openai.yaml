@@ -1,6 +1,6 @@
 interface:
   display_name: "Implement Plan"
-  short_description: "Drive a reviewed plan fully to done"
-  default_prompt: "Use $implement-plan to implement this plan through reviewed batches and a closing refactor-and-improvement gate."
+  short_description: "Drive a reviewed plan to done — [--commit] <plan-path>"
+  default_prompt: "Use $implement-plan [--commit] <plan-path> to implement this plan through reviewed batches and a closing gate. Without --commit nothing touches Git; with it, each approved batch becomes a provisional scratch commit and the working tree must be clean and off the default branch before batch 1. $implement-plan-commit is the same run with commits always on."
 policy:
   allow_implicit_invocation: false

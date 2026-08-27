@@ -1,0 +1,6 @@
+interface:
+  display_name: "Implement Plan (commits on)"
+  short_description: "Same run, commits always on — <plan-path>, no flag"
+  default_prompt: "Use $implement-plan-commit <plan-path> to implement this plan with provisional per-batch commits, without needing the --commit flag. Preconditions checked once before batch 1: the working tree is clean and HEAD is not the default branch. Use $implement-plan for a run that must not change Git state."
+policy:
+  allow_implicit_invocation: false

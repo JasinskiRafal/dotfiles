@@ -1,0 +1,6 @@
+interface:
+  display_name: "Review Project"
+  short_description: "Audit the code as it stands — [path or subsystem]"
+  default_prompt: "Use $review-project [path or subsystem] to audit the project on several lenses at once, verify every finding, and write a numbered report under reviews/. Omit the path to be asked for a scope. Produces a document, never a code change."
+policy:
+  allow_implicit_invocation: false
