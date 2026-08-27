@@ -53,7 +53,8 @@ included but should not be. A design without a stated edge grows one during plan
 
 ## Do not design past the question
 
-No task breakdown, no file-by-file plan, no step ordering. That is the `planner`'s job, and
+No task breakdown, no file-by-file plan, no step ordering. That is the planning phase's job —
+the parent writes the plan once the design is agreed — and
 producing it here yields a plan nobody agreed to and a design nobody reviewed. Stop at the
 shape of the solution.
 

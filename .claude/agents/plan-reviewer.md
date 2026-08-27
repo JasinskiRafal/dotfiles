@@ -2,8 +2,8 @@
 name: plan-reviewer
 description: Read-only reviewer of a plan document against an agreed design — coverage, task ordering, whether every task is actually verifiable, missing constraints, and scope creep. Used by /create-plan as the plan-review phase. Returns APPROVED or CHANGES_REQUIRED. Never edits the plan.
 tools: Read, Grep, Glob, Bash
-model: opus
-effort: medium
+model: sonnet
+effort: high
 ---
 
 You review a **plan document** against the design it was written from. You return one of two
@@ -41,7 +41,7 @@ check in place of a host test is a `blocking` finding, and a plan that needs a d
 to become testable is an open question for the human, not something to wave through.
 
 **Verifiability — the check that pays for itself.** Every task must state a command and its
-expected result. An implementer will actually run these, so a step reading "verify it works",
+expected result. An parent will actually run these during implementation, so a step reading "verify it works",
 "check the output looks right", or naming no command at all forces a mid-run plan amendment
 *after* work has been done against it. Quote the offending step. This is the most valuable finding you can
 produce, so look for it first.

@@ -100,10 +100,10 @@ There are seven commands, on two tracks, and they are not interchangeable.
 
 **The autonomous loop — four commands.** `/review-project`, `/create-plan`,
 `/implement-plan`, `/debug`. Each is one step of the loop. Each pins its own
-model and effort, each delegates its phases to agents in `.claude/agents/`, and
-the first three each leave a file behind. These carry the full discipline in this
-document: mandatory test-first, evidence for every claim, and a phase boundary I
-stand at.
+model and effort, each does its own writing and delegates its reading to the
+read-only agents in `.claude/agents/`, and the first three each leave a file
+behind. These carry the full discipline in this document: mandatory test-first,
+evidence for every claim, and a phase boundary I stand at.
 
 **The assisting commands — three.** `/just`, `/review`, `/verify`. These are not
 loop steps and they are not phases. Each runs on Sonnet in a single pass,
@@ -118,6 +118,67 @@ to run `/create-plan`, and does not plan it itself. A loop command never
 substitutes an assisting command for one of its delegated phases:
 `/implement-plan`'s reviewer is the `reviewer` agent, never the `/review`
 command, and its closing gate is the `verifier` agent, never `/verify`.
+
+## Writers run inline; readers are spawned, and spawned together
+
+**One rule decides where a phase runs. A phase that changes a file runs inline,
+in the command's own context. A phase that only reads runs as a spawned agent,
+and every spawn a step needs goes out in a single message.**
+
+`.claude/agents/` therefore holds **read-only agents only** — `auditor`,
+`auditor-verify`, `brainstormer`, `plan-reviewer`, `plan-simplifier`, `reviewer`,
+`verifier`. Each has `tools: Read, Grep, Glob, Bash` and writes nothing.
+
+**Effort is priced by how narrow the job is, not by how important it is.** An
+agent handed a scope it has not seen and asked what is worth reporting earns high
+effort; one handed a path, a line and a claim to check usually settles it on the
+first look, and it is the one that runs many times over. That is why `auditor`
+sits at high and `auditor-verify` at medium, and why `verifier` — which runs a
+command and reports what it printed — sits at low. There is no
+`implementer`, `test-writer`, `planner` or `debugger` agent: implementing,
+writing tests, writing and amending plans, and debugging are all things the
+commands do themselves, on the model their own frontmatter pins.
+
+**Why writing is inline.** A cold spawn's expensive half was never the code — it
+was re-deriving the build directory, the layout and the conventions, once per
+spawn and again per fix pass. The command already holds all of it: it read the
+plan, it established the baseline, it has every earlier batch in view. Handing
+that to a fresh agent means writing a brief to reconstruct what the context
+already knows, waiting for it to re-read the plan, and reconciling a summary
+against the tree. For work the orchestrator can simply do, that is pure overhead.
+
+**Why reading is spawned.** Not cost — it *cannot* be done inline. A reviewer
+that also wrote the code is not an independent second look, it is the author
+re-reading their own reasoning. The property the loop rests on is that **the
+reader never wrote what it reads and cannot see why it was written that way.**
+That depends only on the reviewer being separate, so it survives the writing
+moving inline — and it is why review is the one thing that is never inline, at
+any size, on any round, however obvious the finding looks.
+
+**Why spawns go out together.** Read-only agents cannot conflict with each other,
+so a step needing two reviewers, five audit lenses, or one verify pass per
+finding issues them in one message and pays one wall-clock. A parallel step that
+was serialized is a defect, and the metrics blocks report
+`max_concurrent_spawns` so it is visible.
+
+**The hazard inlining introduces: never edit a file while a spawn is in flight.**
+Spawns keep running while the orchestrator works, so nothing mechanically stops
+it starting the next batch, or a fix, over files a reviewer is still reading. A
+reviewer that reads a file mid-edit reports findings against a state that no
+longer exists, and a refine round is then spent on a phantom. Finish writing,
+verify, assemble the changed-file list, spawn — then touch nothing until every
+reader of that scope has reported.
+
+**What the split gives up, and what replaces it.** A separate `test-writer` and
+`implementer` could not tune the test to the code, because neither saw the
+other's work. With both inline that pressure is real: a test authored beside its
+implementation tends to assert what the code does rather than what the behavior
+should be. Three things hold the line, and none is optional — RED demonstrated
+*and recorded verbatim* before any production edit exists; the reviewer
+explicitly briefed to audit the test as well as the code, asking whether the
+assertion would pass without the production change; and the RED-to-GREEN record
+per batch as a required report section, with any test *changed* rather than
+added called out by itself.
 
 ## Step boundaries — signal completion, never auto-advance
 
@@ -151,17 +212,18 @@ in its own frontmatter too**. Either way the phase runs on a model chosen for it
 rather than on whatever the session happened to be on.
 
 That is why `/create-plan` and `/implement-plan` may run several phases in one
-invocation. Both delegate every phase and adjudicate the results —
-`/create-plan` to brainstormer, planner, plan-reviewer and plan-simplifier,
-`/implement-plan` to
-implementer, reviewer, and the rarer debugger, verifier and planner. Neither
-orchestrator writes the artifact its own reviewer will read.
+invocation. Each writes its own artifact on the model its frontmatter pins —
+`/create-plan` the plan, `/implement-plan` the tests and the code — and delegates
+every *reading* phase, concurrently: `/create-plan` to brainstormer,
+plan-reviewer and plan-simplifier, `/implement-plan` to reviewer and verifier.
+Neither orchestrator reviews what it wrote.
 
-What makes per-batch delegation affordable is that the orchestrator establishes
-the project **once** — the build directory, the incremental build and test
-commands, the layout and conventions — and hands the same brief to every spawn.
-A spawn that re-runs project setup costs more than it saves, so re-configuring or
-wiping a configured build tree is forbidden to every spawned agent, always.
+What makes this affordable is that the orchestrator establishes the project
+**once** — the build directory, the incremental build and test commands, the
+layout and conventions — and then keeps it, because it is the thing doing the
+work rather than briefing someone else to. Read-only spawns get the parts they
+need. No spawn re-runs project setup: re-configuring or wiping a configured build
+tree is forbidden to every spawned agent, always.
 
 The orchestrator does it at exactly **two scheduled points**: once before the
 first batch, to establish a baseline that actually builds and whose suite is
@@ -183,9 +245,10 @@ guessing).
 
 ## The loop
 
-Design → plan → execute in reviewable batches → verify with evidence. Each phase
-is a delegated agent in `.claude/agents/`, pinned to its own model and effort;
-the commands below orchestrate them. Prefer them over improvising.
+Design → plan → execute in reviewable batches → verify with evidence. The
+writing phases run inline in the command, on the model and effort its frontmatter
+pins; the reading phases are read-only agents in `.claude/agents/`, each pinned
+to its own, spawned concurrently. Prefer these commands over improvising.
 Plans live as separate numbered files in `plans/`, one file per feature or
 work item — never one monolithic plan document.
 
@@ -213,8 +276,8 @@ The loop takes no fifth step. A new *loop* command needs a reason of the same
 kind these four have: its own artifact, its own pinned model, and a phase
 boundary I want to stand at. The per-phase loop commands that used to exist
 (`/brainstorm`, `/plan`, `/execute`, `/tdd`) are gone, and so are the per-phase
-skills that mirrored them — every loop phase now lives in the agent that runs
-it, reached through one of the four commands above. Two skills remain because a
+skills that mirrored them — every loop phase now lives either in the command that
+runs it, where it writes, or in the read-only agent it spawns, where it reads. Two skills remain because a
 command depends on each: `systematic-debugging`, which is the substance of
 `/debug`, and `test-driven-development`, which is the discipline the mandatory
 testing rule above runs on.
@@ -233,13 +296,29 @@ command, on whatever model the session happens to be on — so it drifted into
 contradicting the command it was meant to support. A command with `model:` and
 `effort:` in its own frontmatter does not have that defect; a bare skill does.
 
-**A reached bound is not a halt.** A review that will not come clean escalates —
-diagnose, re-scope, re-adjudicate, amend the plan — and a stale plan is amended
-rather than abandoned. What stops a run is a progress ledger: two consecutive
-rounds that resolve nothing, change no finding, touch no file and produce no new
-output. The halts that remain are the ones no further agent work can clear: a new
-dependency, an undemonstrable RED, and a decision that would change what gets
-built.
+**Two reviews, never three.** Any review→fix→re-review cycle in this workflow is
+capped at **two rounds**: the review, one fix pass, one re-review. That holds per
+batch in `/implement-plan`, for its closing gate, and for the plan review in
+`/create-plan`. Checking a third time is overkill — two passes having failed on
+the same findings says the *assignment* is wrong rather than the execution, and
+another reviewer will not discover that.
+
+What happens instead of a third review is adjudication, not another spawn:
+re-read the surviving findings assuming the reviewer may be wrong and reject what
+is mistaken, with the rationale in the report; diagnose where a failure is
+unexplained; and where the task itself is the defect, amend the plan and re-run
+that batch once. **A batch closed on stated rejections, or a plan handed over
+with one named open finding, is a legitimate outcome** — better than one ground
+through a third round. My eyes are cheaper than a fourth agent's, and the report
+is where I use them.
+
+**A reached bound is not a halt.** A review that will not come clean is
+adjudicated as above, and a stale plan is amended rather than abandoned. What
+stops a run is a progress ledger: two consecutive rounds that resolve nothing,
+change no finding, touch no file and produce no new output. The halts that remain
+are the ones no further agent work can clear: a new dependency, an undemonstrable
+RED, a second amendment to the same batch, and a decision that would change what
+gets built.
 
 RED that cannot be demonstrated is also such a halt: it means the test or the
 task is wrong, and no further agent work settles which.
@@ -247,13 +326,13 @@ task is wrong, and no further agent work settles which.
 Plan numbers are `max + 1` over `plans/*.md` — never the first gap, never reused,
 and a collision is a halt rather than a second file sharing a number.
 
-After every batch spawn an agent that is meant to verify if the step
-is correctly implemented based on the requirements described.
-Every discrepancy should be signalled, as something might have been changed by me,
-thus the correct action might be altering the plan.
+After every batch spawn a read-only agent to verify that the step is correctly
+implemented against the requirements described — never judge your own batch, at
+any size. Every discrepancy should be signalled, as something might have been
+changed by me, thus the correct action might be altering the plan.
 
-The loop alters the plan itself rather than stopping: a delegated `planner` in amend
-mode, inside a stated boundary — reconcile the plan with the repository, change no
-design decision, add no scope — and every amendment is reported to me, because I
-approved the plan I read and an amended task is one I have not. A discrepancy stops
-the run only when reconciling it would change what gets built.
+The loop alters the plan itself rather than stopping: `/implement-plan` amends it
+inline, inside a stated boundary — reconcile the plan with the repository, change no
+design decision, add no scope — and every amendment is reported to me in its own
+section, because I approved the plan I read and an amended task is one I have not.
+A discrepancy stops the run only when reconciling it would change what gets built.

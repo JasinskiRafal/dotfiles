@@ -28,10 +28,11 @@ there is no specification — the question is what the code *is*, not whether a 
 correct. Different question, different scope, different agent (`auditor`).
 
 **Cost shape, so it is not a surprise.** One `auditor` spawn per lens on sonnet at high
-effort, then one `auditor` in verify mode per surviving finding. A five-lens audit producing
-thirty findings is 5 + 30 spawns. That is deliberate — see §5 for why verification is not the
-place to economise — but it means **scope is the cost control**, and §1 exists to keep the
-scope honest rather than heroic.
+effort, then one `auditor-verify` per surviving finding on sonnet at **medium** — the verify
+pass is the volume here, and refuting one named claim is a narrower job than auditing a scope,
+so it is priced lower. A five-lens audit producing thirty findings is 5 + 30 spawns. That is
+deliberate — see §5 for why verification is not the place to economise — but it means **scope is
+the cost control**, and §1 exists to keep the scope honest rather than heroic.
 
 ## 1. Scope it, and say what is out
 
@@ -118,8 +119,12 @@ this list does not have. Adding a lens is cheap and one message; dropping one si
 
 ## 5. Verify every finding before it reaches the report
 
-Spawn a fresh `auditor` in **verify mode** per surviving finding, and tell it to **refute**.
-Run them concurrently in batches.
+Spawn a fresh **`auditor-verify`** per surviving finding — that agent's whole job is to refute
+one named claim, and it defaults to `REFUTED` when uncertain.
+**Issue them in a single message**, one spawn per finding — they are read-only, so they cannot
+conflict, and a verification pass that goes out one finding at a time turns the cheapest step in
+this command into the longest. Where the surviving set is large, send them in as few messages as
+the harness will take rather than in a loop of one.
 
 This is the step that makes the report worth reading. An audit's characteristic failure is not
 missing something — it is a confident, well-written finding that is not true: a path that
@@ -129,9 +134,12 @@ imaginary only when somebody tries to fix it.
 
 - **`REFUTED`** — drop it. Record it in the report's rejected list with the refutation, so the
   next review does not re-raise it.
-- **`CONFIRMED`** — it goes in, with any correction the verifier made to its severity or
-  sites.
-- **Verifier and auditor disagree about severity** — you decide, and say so.
+- **`CONFIRMED`** — it goes in, with any correction the `auditor-verify` made to its severity
+  or sites.
+- **`auditor-verify` and `auditor` disagree about severity** — you decide, and say so.
+- **It returns a finding of its own** under `Noticed in passing` — that is not verified and does
+  not enter the report as a finding. Either it is worth a fresh `auditor` spawn on the right
+  lens, or it is a line in `Not covered`. Never promote an unverified observation.
 
 **Never skip verification to save spawns.** If the finding count is so high that verification
 is unaffordable, that is a signal the lenses over-reported: push back on severity first
@@ -161,7 +169,7 @@ finding that quietly vanished makes the report unauditable.
 
 ## 7. Ask what was missed
 
-Before writing, spawn one final `auditor` in audit mode with a **completeness lens**: given
+Before writing, spawn one final `auditor` with a **completeness lens**: given
 the scope, the exclusions, and the confirmed findings, what part of the scope did no lens
 actually read, and what class of problem could this lens set not see?
 
@@ -173,12 +181,13 @@ it missed reads as complete**, and the human then plans against it as though it 
 You write it yourself, at `reviews/NNN-<slug>.md`. The slug names the scope
 (`reviews/003-firmware-lib.md`).
 
-Writing it here rather than delegating is deliberate, and it is the one place this command
-differs from `/create-plan`. There, the plan is delegated because its reviewer must not have
-authored it. Here the findings were produced by agents you did not brief on each other and
-independently verified by agents that tried to refute them — the report is a synthesis of
-adjudications only you made. And it gets reviewed downstream anyway: `/create-plan` puts any
-plan built from it through `plan-reviewer` and `plan-simplifier`.
+Writing it here rather than delegating is deliberate, and it is the same rule `/create-plan`
+follows: **the phase that writes a file runs inline, and every spawned phase is read-only.**
+The findings were produced by agents you did not brief on each other and independently verified
+by agents that tried to refute them — the report is a synthesis of adjudications only you made,
+and there is no brief that would let a fresh agent reconstruct them. It gets reviewed downstream
+anyway: `/create-plan` puts any plan built from it through `plan-reviewer` and
+`plan-simplifier`.
 
 Required structure:
 
@@ -258,7 +267,7 @@ refactor nobody approved.
   Where a finding depends on runtime behaviour, it is a `What I could not judge` entry, not a
   guess.
 - **Never invent a finding, a rule ID, a path, or a line number.** Every finding is evidenced
-  and verified, or it is not in the report.
+  by an `auditor` and survived an `auditor-verify`, or it is not in the report.
 - Never read or print a secret or an API key.
 - Do not edit an existing review report. A superseded review stays as written; a new audit is
   a new number.
@@ -266,9 +275,21 @@ refactor nobody approved.
 ## 12. Why this does not break the step-boundary rule
 
 `~/.claude/CLAUDE.md` requires the human to start each phase because each belongs on a
-deliberately chosen model. Every phase here runs on one pinned in its own frontmatter: this
-file pins `opus` at `medium` for scoping, adjudication and synthesis, and `auditor` pins
-`sonnet` at `high` for both the lens audits and the verification passes.
+deliberately chosen model. **A slash command pins a model in its own frontmatter exactly as a
+subagent does**, so every phase here runs on one chosen for it: this file pins `opus` at
+`medium` for scoping, adjudication and synthesis, `auditor` pins `sonnet` at `high` for the lens
+audits, and `auditor-verify` pins `sonnet` at `medium` for the per-finding refutations.
+
+**Why the verify pass is cheaper than the audit.** An audit reads a scope it has not seen and
+decides what is worth reporting; a refutation is handed a path, a line and a claimed
+consequence, and usually settles on the first check — does the cited code exist as described.
+That is the most common way a finding is wrong and the cheapest thing to look at, so the pass
+that does it many times over is the one to price down. It is also why it never audits: an agent
+asked to refute *and* to look around returns findings nobody verified.
+
+This command is the simplest case of the workflow's split — **writers inline, readers spawned
+and parallelized.** It has no writer phase but the report, which is yours; every one of its
+spawns is a read-only `auditor`, and they go out concurrently in §4, §5 and §7.
 
 The handover in §10 is a consent point, not a formality: this command's entire purpose is to
 put a decision in front of the human, so rolling into `/create-plan` would destroy the reason

@@ -24,8 +24,14 @@ Why not the `reviewer` agent: `reviewer` judges a diff against a task, needing c
 a specification. Here nothing has changed and there is no specification — the question is what
 the code *is*. Different question, different agent (`auditor`).
 
-Cost: one `auditor` per lens, then one `auditor` in verify mode per surviving finding. Five
-lenses producing thirty findings is 5 + 30 spawns. Scope is the cost control.
+Cost: one `auditor` per lens at `xhigh`, then one `auditor-verify` per surviving finding at
+`high`. Five lenses producing thirty findings is 5 + 30 spawns, and the verify pass is the
+volume — which is why refuting one named claim is priced below auditing a whole scope. Scope is
+the cost control.
+
+This skill is the simplest case of the workflow's split — **writers inline, readers dispatched
+concurrently.** It has no writer phase but the report, which is the parent's; every spawn is a
+read-only auditor, and they go out together in Sections 4, 5, and 7.
 
 ## 1. Scope it, and say what is out
 
@@ -94,8 +100,11 @@ dropping one silently is not.
 
 ## 5. Verify every finding before it reaches the report
 
-Spawn a fresh `auditor` in verify mode per surviving finding, told to refute. Run them
-concurrently in batches.
+Dispatch a fresh **`auditor-verify`** per surviving finding — that agent's whole job is to
+refute one named claim, and it defaults to `REFUTED` when uncertain. **Issue them in a single
+message**, one per finding: a verification pass sent one finding at a time turns the cheapest
+step here into the longest. Where the surviving set is large, use as few messages as the
+harness will take rather than a loop of one.
 
 This is what makes the report worth reading. An audit's characteristic failure is not missing
 something — it is a confident, well-written finding that is not true: a path that moved, a race
@@ -106,6 +115,9 @@ finding survives into a plan and is found imaginary only when somebody tries to 
   does not re-raise it.
 - `CONFIRMED`: it goes in, with any correction to severity or sites.
 - Disagreement about severity: the parent decides and says so.
+- A finding of its own under `noticed in passing`: that is unverified and never enters the
+  report as a finding. Either it warrants a fresh `auditor` on the right lens, or it is a line
+  in `Not covered`. Never promote an unverified observation.
 
 Never skip verification to save spawns. Where the finding count makes verification
 unaffordable, the lenses over-reported: push back on severity first, verify what remains, and
@@ -132,11 +144,12 @@ reads as complete, and the human then plans against it as though it were.
 
 ## 8. Write the report
 
-The parent writes it, at `reviews/NNN-<slug>.md`, the slug naming the scope. Writing rather than
-delegating is deliberate: the findings were produced by agents not briefed on each other and
+The parent writes it, at `reviews/NNN-<slug>.md`, the slug naming the scope. That follows the
+same rule `$create-plan` does — **the phase that writes a file runs inline, and every dispatched
+phase is read-only.** The findings were produced by agents not briefed on each other and
 independently verified by agents trying to refute them, so the report is a synthesis of
-adjudications only the parent made — and any plan built from it is reviewed downstream by
-`plan-reviewer` and `plan-simplifier`.
+adjudications only the parent made, and no brief would let a fresh agent reconstruct them. Any
+plan built from it is reviewed downstream by `plan-reviewer` and `plan-simplifier`.
 
 Sections, in order: `# NNN — Review: <scope>`, then `## Scope`, `## Not covered`,
 `## Summary`, `## Themes`, `## Findings`, `## Rejected`, `## Suggested plan slices`.
@@ -172,7 +185,8 @@ a report instead of a change.
 - Read-only Git only — status, diff, log, show, blame. `git log` and `git blame` are useful
   here: churn and authorship distinguish a deliberate pattern from an accident.
 - Do not run the build or test suite to produce a finding.
-- Never invent a finding, a rule ID, a path, or a line number.
+- Never invent a finding, a rule ID, a path, or a line number. Every finding is evidenced by an
+  `auditor` and survived an `auditor-verify`, or it is not in the report.
 - Never read or print a secret.
 - Do not edit an existing review report; a superseded review stays as written and a new audit
   takes a new number.

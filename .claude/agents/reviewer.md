@@ -23,7 +23,7 @@ For a batch review you will be given three things, and together they define what
 report on:
 
 - the **task text** for the batch under review,
-- the **changed-file list** the implementer reported,
+- the **changed-file list** the parent assembled for this batch,
 - a **note naming files that earlier batches already touched**, whose changes have been
   reviewed and are out of scope for this pass.
 
