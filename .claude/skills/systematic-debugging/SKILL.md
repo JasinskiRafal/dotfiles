@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use on encountering any bug, unexpected behavior, build failure, or wrong output, before proposing or applying a fix. Enforces understanding the root cause before changing code, via a four-phase loop: investigate, analyze patterns, test a hypothesis, then implement. Use whenever something doesn't work and the cause isn't already proven.
+description: "Use on encountering any bug, unexpected behavior, build failure, or wrong output, before proposing or applying a fix. Enforces understanding the root cause before changing code, via a four-phase loop: investigate, analyze patterns, test a hypothesis, then implement. Use whenever something doesn't work and the cause isn't already proven."
 ---
 
 # Systematic Debugging

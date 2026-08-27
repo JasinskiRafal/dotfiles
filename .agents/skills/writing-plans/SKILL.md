@@ -8,7 +8,9 @@ description: Write a detailed, self-contained implementation plan in plans/ afte
 Create one detailed plan that another engineer could execute with minimal
 back-and-forth. Do not implement the plan in this phase.
 
-1. List `plans/` and choose the next unused number.
+1. List `plans/` and choose the **highest numeric prefix plus one**. Never fill the
+   first gap and never reuse a number: gaps stay gaps so every citation of a plan
+   number stays resolvable. Halt rather than creating a second file sharing a number.
 2. Create `plans/NNN-short-slug.md`; one work item per file. Split large work
    into multiple plans and cross-reference them.
 3. Use this structure:

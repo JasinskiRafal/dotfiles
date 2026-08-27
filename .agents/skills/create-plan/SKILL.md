@@ -8,8 +8,12 @@ description: Interactively turn a rough feature or work-item idea into an agreed
 Orchestrate the front half of the development pipeline:
 
 ```text
-brainstorm -> agree design -> write plan -> review -> refine -> hand over
+brainstorm -> agree design -> write plan -> review + simplify (concurrent) -> refine -> hand over
 ```
+
+The weight of the pipeline is deliberately on this end. A defect caught in the plan
+costs one refine round; the same defect caught during execution costs a batch, a
+review, a plan amendment, and every batch built on it since.
 
 Delegate every specialist phase to a fresh custom agent. Keep the agreed design,
 decision provenance, review findings, adjudication, and iteration count in the
@@ -70,20 +74,54 @@ Spawn a fresh `plan-writer` in write mode with:
 The writer chooses the slug and writes exactly one
 `plans/NNN-short-slug.md`. The parent never writes or patches the plan.
 
-## 5. Review and refine
+## 5. Review on two lenses, then refine
 
-Spawn a fresh `plan-reviewer` with the complete agreed design and plan path.
-Do not substitute the code `reviewer`; no implementation exists yet.
+Spawn two fresh agents concurrently, in a single message, each with the complete
+agreed design and the plan path. Both are read-only, so they cannot conflict and
+the second costs no wall-clock:
 
-Adjudicate every finding. Accept findings that are technically justified and
-inside the agreed design. Reject other findings with a one-line rationale for
-the handover report. A nit alone does not require refinement.
+- `plan-reviewer` — is the plan correct and complete? Returns `APPROVED` or
+  `CHANGES_REQUIRED`.
+- `plan-simplifier` — is the plan minimal? Returns `ALREADY_MINIMAL` or
+  `SIMPLIFICATIONS_FOUND`.
 
-When accepted findings exist, spawn a fresh `plan-writer` in refine mode with
-only those findings, then spawn a fresh `plan-reviewer`. Never let a writer
-review its own plan or reuse a reviewer across iterations. Halt when the plan is
-not approved after three refine-and-review iterations and report the unresolved
-findings.
+They are deliberately different questions, and one agent asked both does neither
+well: a reviewer hunting for missing coverage is primed to add, a simplifier is
+primed to remove. Asked together those pressures cancel into a plan that is
+average on both. Asked separately and adjudicated by the parent, they produce a
+plan that is complete and small.
+
+Do not substitute the code `reviewer` for either; no implementation exists yet.
+
+`ALREADY_MINIMAL` is a real outcome for a plan written against a tight design.
+Treat it as success, not as an agent that failed to find something, and do not
+send it back looking harder.
+
+Adjudicate both finding sets in one pass. Accept findings that are technically
+justified and inside the agreed design. Reject other findings with a one-line
+rationale for the handover report. A nit alone does not require refinement.
+
+Where the two lenses conflict, the parent decides and coverage wins: a
+simplification that would drop something the reviewer requires for coverage is
+rejected, with the reason stated in the report so the next round does not propose
+it again. The plan must deliver the agreed design first and be small second. Never
+average the two into a midpoint neither agent proposed.
+
+The simplifier's `observations for the human` are not findings and are never sent
+to the writer. Carry them verbatim into the handover report; a shape-changing one
+is a halt, not a parent decision.
+
+When accepted findings exist, spawn a fresh `plan-writer` in refine mode with only
+those findings — one refine spawn carrying both lenses' accepted findings, never
+one per lens — then re-run both lenses. A refined plan is a new plan: a
+simplification applied in one round can break coverage in a way only a fresh
+`plan-reviewer` will see.
+
+Never let a writer review its own plan or reuse a reviewer across iterations. A
+round is clean when `plan-reviewer` returns `APPROVED`; a `SIMPLIFICATIONS_FOUND`
+whose every finding was rejected with a rationale does not hold the loop open.
+Halt when the plan is not approved after three refine-and-review iterations and
+report the unresolved findings.
 
 Skip code and conventions reviewers because there is no implementation diff.
 Record that skip in the handover.
@@ -95,8 +133,13 @@ Report:
 - the plan path and concise design;
 - human decisions versus inspection-derived constraints;
 - out-of-scope boundaries;
-- review history and refine count;
-- rejected findings and rationale;
+- review history and refine count, with both lenses' verdicts per round;
+- what the simplifier changed — tasks merged or dropped, abstractions removed,
+  existing code reused instead of rewritten — stated even when the verdict was
+  `ALREADY_MINIMAL`, because a second lens finding nothing is information;
+- the simplifier's observations for the human, verbatim;
+- rejected findings and rationale, including every simplification rejected for
+  conflicting with coverage;
 - every Open question recorded in the plan.
 
 Offer `$implement-plan-commit <plan-path>` for execution with provisional

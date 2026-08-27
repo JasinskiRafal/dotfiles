@@ -69,6 +69,58 @@ review. Do not infer one from a generic reviewer.
 - If one exists, run it beside the correctness reviewer only for changed files
   within its documented remit. Record every skip and reason.
 
+## 2b. Assemble the warm handoff brief — once, before batch 1
+
+Everything a spawn would otherwise rediscover, establish once here and pass verbatim
+in every `batch-implementer` prompt for the rest of the run. This is what makes
+per-batch delegation affordable; skipping it turns each batch into a cold project
+setup.
+
+**Find the existing build directory before considering a new one.** A configured
+build tree is often hundreds of megabytes and minutes of cross-compilation, and it is
+already on disk. Look for it in this order:
+
+- an existing configured directory — `<dir>/meson-info/`, `<dir>/CMakeCache.txt`,
+  `<dir>/build.ninja`, or a `compile_commands.json` naming its own directory;
+- the directory the repository's own docs use — `README.md`, `CONTRIBUTING.md`, or the
+  build section of its `AGENTS.md`;
+- only if neither exists, create it once with the exact command those docs prescribe.
+
+Where several are configured — a native `build/` beside a cross `build-rpi5/` or a
+sanitizer `build-tsan/` — name the one this plan's verification needs and say why in
+the batching report. Where the plan needs two, name both and label which verification
+belongs to which. Never leave a spawn to infer it: a spawn that guesses configures a
+third one.
+
+**State the incremental command, not the setup command:** `meson compile -C <dir>` and
+`meson test -C <dir>`; `cmake --build <dir>` and `ctest --test-dir <dir>`. Repository
+docs typically show the first build (`meson setup build && meson compile -C build`);
+that first line is already paid, and a spawn that copies the recipe verbatim pays it
+again. The brief exists so the spawn never reads that line as an instruction.
+
+**Forbidden to every spawn and to the parent:** re-configuring a configured directory
+(`meson setup` on an existing one, `--wipe`, `--reconfigure`, a fresh `cmake`
+configure, `--fresh`); deleting or recreating a build directory (`rm -rf <dir>` is
+destructive and belongs to the human); a second directory under a new name; changing
+the configured options (`-D<option>`, `-DCMAKE_BUILD_TYPE`, a different
+`--cross-file`), which reconfigures the tree for every later batch. A spawn reporting
+the directory unusable does not repair it — it reports and stops, and the parent
+amends the brief or halts with the exact command for the human.
+
+The brief carries, verbatim, in every spawn prompt:
+
+1. the plan path, and the tasks or accepted findings that spawn owns;
+2. the build directory or directories, and the incremental build and test commands;
+3. the project facts already established — where source lives, which docs are
+   authoritative for conventions, the guideline pages that apply;
+4. the files earlier batches already touched, so it leaves them alone;
+5. the setup prohibitions above, stated rather than referenced — the spawn does not
+   have this file.
+
+Re-derive nothing per batch. When a batch teaches a project fact worth having, add it
+to the brief so the next spawn starts with it; the brief only grows. Print the brief
+once when assembled, then print only what changed.
+
 ## 3. Run each batch
 
 For each batch in order:
@@ -76,13 +128,24 @@ For each batch in order:
 1. Spawn a fresh `batch-implementer` in batch mode with the full plan path,
    exact task text, pre-existing-change note, and earlier-batch file note.
 2. Require its commands and material output plus an authoritative changed-file
-   list. If the list is missing, request only that report detail; halt if it
-   remains unavailable.
+   list. The batch is self-verified before it is reviewed: the implementer runs each
+   task's verification step, re-reads the task against what it changed, and returns
+   real output. If the changed-file list is missing, request only that report detail;
+   halt if it remains unavailable. If the verification evidence is missing or is a
+   bare claim that it passed, re-spawn for it rather than reviewing on trust, and say
+   so in the batch report — reviewing an unverified batch spends a reviewer on
+   findings a build would have caught. Carry any deferred check forward, naming the
+   command and the machine.
 3. Halt on a reported plan/repository discrepancy, work already present,
    unexplained verification failure, unauthorized test, new dependency, or
    unresolved decision. Do not reinterpret it as completed work.
 4. After accessible verification passes, spawn a fresh correctness `reviewer`
    and any applicable conventions reviewer concurrently.
+
+Every spawn — implementer, fix, reviewer, and any diagnostic — carries the same warm
+handoff brief from §2b, plus what earlier rounds already tried. A diagnosis spawn that
+begins by re-configuring the build directory has spent the escalation on the thing the
+brief was written to prevent.
 
 Scope reviewers precisely:
 

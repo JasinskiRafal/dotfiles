@@ -12,9 +12,20 @@ Never append to or create a single monolithic plan document.
 ## File convention
 
 - Path: `plans/NNN-short-slug.md` (e.g. `plans/007-uart-dma-ringbuffer.md`).
-- Pick the next unused number by listing `plans/`.
+- **Number is `max + 1`** — the highest number in `plans/*.md`, plus one. Never the
+  first gap, and never a reused number: gaps stay gaps so that every citation of a
+  number, in a review note or a commit message, stays resolvable.
+
+  ```sh
+  ls plans/*.md 2>/dev/null | sed 's#.*/##' | cut -d- -f1 | sort -n | tail -1
+  ```
+
+  If a file with that number already exists, **halt** rather than creating a second
+  file sharing it. The looser "next unused number" rule reliably produces collisions
+  once two components both get to decide.
 - One work item per file. If a feature is large, split into multiple numbered
-  files and cross-reference them.
+  files and cross-reference them — and say so, because splitting is the human's
+  call, not a way to fit more into one run.
 
 ## Required structure
 
@@ -58,4 +69,11 @@ running `/implement-plan <plan file>`.
   version control is the human's job (see CLAUDE.md).
 - Keep tasks small enough to review in a batch. If a task can't be verified,
   it's too vague — refine it.
+- **Write the minimum plan that delivers the design.** No interface with one
+  implementation, no factory for a single product, no config knob for something the
+  design never varies, no "so we can later…" — later is not in this plan. Reuse what
+  the repository already has rather than planning a new helper beside it.
+- **One verification step that proves a behavior beats five that circle it.** Every
+  step is a command an implementer runs on every batch and every fix pass, so a
+  redundant check is paid many times over.
 - End by telling the human the plan file path and asking whether to execute it.

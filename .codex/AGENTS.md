@@ -89,11 +89,26 @@ $implement-plan-commit  same as $implement-plan --commit; commits are mandatory
 `$create-plan` is the interactive front half. It delegates repository
 inspection, plan writing, and plan review to fresh specialized agents, asks the
 human only for decisions inspection cannot settle, and stops after handing over
-the reviewed plan.
+the reviewed plan. It reviews on **two concurrent lenses** — `plan-reviewer` for
+correctness and coverage, `plan-simplifier` for minimality — and adjudicates
+both in one pass. Where they conflict, coverage wins. The weight of the pipeline
+is deliberately on this end: a defect caught in the plan costs one refine round,
+the same defect caught during execution costs a batch, a review, an amendment,
+and every batch built on it since.
 
 `$implement-plan` is the unattended back half. It delegates every implementation
 and review assignment to a fresh specialized agent and proceeds until the plan
-is complete or a hard halt condition occurs. It does not stop between batches.
+is complete or a hard halt condition occurs. It does not stop between batches:
+each batch is verified by the agent that implemented it and reviewed by one that
+did not, which is strictly more than a human glance at a checkpoint would give
+it.
+
+What makes per-batch delegation affordable is that the orchestrator establishes
+the project **once** — the build directory, the incremental build and test
+commands, the layout and conventions — and hands the same brief to every spawn.
+A spawn that re-runs project setup costs more than it saves; re-configuring,
+wiping, deleting, or duplicating a configured build tree is forbidden to every
+agent and reserved to the human.
 `$implement-plan-commit` is its commit-on wrapper for invocations where the
 human does not want to remember the optional flag. Only an explicit invocation
 selects an orchestrator; ordinary planning and implementation requests continue

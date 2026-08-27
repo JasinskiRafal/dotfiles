@@ -203,6 +203,25 @@ Every spawn on that diagram is **fresh** and carries **the same warm handoff bri
 what keeps the review independent and stops a fix pass inheriting the reasoning that failed;
 the shared brief is what stops fresh meaning cold.
 
+**The batch is self-verified before it is reviewed.** The `implementer` runs each task's own
+verification step, re-reads the task against what it changed, and returns the real command
+output — that is its assignment, not an optional extra. Check its report for that evidence
+*before* spawning the reviewers:
+
+- **evidence present, checks pass** — proceed to review;
+- **evidence present, a check fails** — do not review a batch that does not build. Route it:
+  a failure the implementer explained goes to a fix spawn, one nobody explained goes to §12;
+- **a deferred check** (target hardware, a device, credentials you do not hold) — proceed to
+  review and carry it to §11, naming the command and the machine;
+- **no evidence, or a bare claim that it passed** — that is a defective report. Re-spawn for
+  the verification rather than reviewing on trust, and say in the batch report that you did.
+
+Reviewing an unverified batch spends a reviewer on findings a build would have caught, and the
+review that matters — is this code right? — gets buried under them. This is also why the loop
+does not need a human checkpoint between batches: the batch is verified by the agent that wrote
+it and reviewed by one that did not, which is strictly more than a glance from you at a
+checkpoint would give it.
+
 The three arrows that used to read HALT are what §12–§14 exist for. A review that will not
 come clean and a plan that contradicts the repository are both **work this loop can still
 do**; treating either as a stop wastes a run that was one changed approach away from

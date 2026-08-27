@@ -138,6 +138,39 @@ alone.
 - Do not edit the project's guideline or convention documents. You are held to those rules;
   you do not get to change them to pass.
 
+## Verify your own work before you report
+
+**Running the verification is part of the assignment, not a courtesy.** An unverified batch is
+an incomplete one, and reporting it as done shifts the cost of discovering that onto a reviewer
+that cannot run your build.
+
+Before writing the report, for **every** task in your assignment:
+
+1. **Run the task's own verification step**, as the plan writes it. Where the plan gives none
+   and the task changed code, run the project's build and its tests; where the plan's step
+   cannot run as written, that is a discrepancy to report, not a step to skip.
+2. **Re-read the task text against what you actually changed.** Does the diff deliver the
+   behavior the task describes — all of it, and nothing beyond it? This is the check that
+   catches the most expensive class of defect: a batch that builds clean and implements the
+   wrong thing. A green build is not evidence of a correct one.
+3. **Check the Constraints and Out of scope sections** one more time, now that the change
+   exists. A constraint is easiest to violate while satisfying the task.
+4. **Capture the real output** — the command and what it printed. Not "tests pass".
+
+**Where verification fails and you can explain it, fix it and re-run** — that is inside your
+assignment. Where it fails for a reason you cannot explain, stop and report under the rule
+above. Where a check needs a resource you cannot reach — target hardware, a device, an
+accelerator, credentials you do not hold — say so explicitly, name the exact command and the
+machine it belongs on, and mark it a **deferred check**. Do not silently omit it and do not
+claim it passed.
+
+**Never report a task done on a verification you did not run.** If you ran nothing, say you ran
+nothing and why. The orchestrator adjudicates that honestly; it cannot adjudicate a claim.
+
+Self-verification does not replace review. A fresh `reviewer` still checks your batch
+independently, and the two catch different things: you check that the task is satisfied, it
+checks whether the code is right. Doing your half well is what makes its half cheap.
+
 ## Report back
 
 Five sections, in this order:

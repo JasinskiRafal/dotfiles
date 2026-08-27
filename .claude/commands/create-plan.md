@@ -12,9 +12,15 @@ This is the front half of a pipeline. `/implement-plan` is the back half, and th
 is the interface between them:
 
 ```
-/create-plan     brainstorm → plan → review the plan → refine → hand over
-/implement-plan  implement  → review → refine → next batch → verify
+/create-plan     brainstorm → plan → review + simplify (concurrent) → refine → hand over
+/implement-plan  implement  → review → refine → next batch → closing gate
 ```
+
+**The weight of this pipeline is deliberately on this end.** A defect caught in the plan costs
+one refine round; the same defect caught in `/implement-plan` costs a batch, a review, a plan
+amendment, and every batch built on it since. So this command reviews on two lenses at once and
+refines until both settle, and its sibling then runs unattended — that only works if what it is
+handed is right.
 
 **Unlike `/implement-plan`, this command asks you questions.** That is deliberate and is
 explained in §2 — it is not a gap to close.
@@ -86,11 +92,24 @@ provenance from §3, and **the number from §4**. It chooses the slug and writes
 
 You do not write or edit the plan yourself, at any point in this command.
 
-## 6. Phase 3 — review the plan
+## 6. Phase 3 — review the plan on two lenses, concurrently
 
-Spawn a fresh **`plan-reviewer`** with the agreed design and the plan file. Not `reviewer` —
-that agent is written for a diff, and at this point there is no diff, no code, and nothing
-with a lifetime. `plan-reviewer` checks:
+Spawn **two** fresh agents with the agreed design and the plan file, **in a single message** so
+they run at the same time. Both are read-only, so they cannot conflict, and the second costs
+you no wall-clock:
+
+- **`plan-reviewer`** — is the plan *correct and complete*?
+- **`plan-simplifier`** — is the plan *minimal*?
+
+They are deliberately different questions, and one agent asked both does neither well: a
+reviewer hunting for missing coverage is primed to add, and a simplifier is primed to remove.
+Asked together, those pressures cancel into a plan that is merely average on both. Asked
+separately and adjudicated by you, they produce a plan that is complete *and* small.
+
+Neither is `reviewer` — that agent is written for a diff, and at this point there is no diff,
+no code, and nothing with a lifetime.
+
+### `plan-reviewer` checks
 
 - **design coverage** — is everything agreed in §3 actually in the plan, and nothing that
   was not agreed;
@@ -107,6 +126,31 @@ with a lifetime. `plan-reviewer` checks:
 - **internal consistency** — a verify block that contradicts the prose it belongs to;
 - **reality** — the paths, symbols and commands the plan names actually exist.
 
+It returns `APPROVED` or `CHANGES_REQUIRED`.
+
+### `plan-simplifier` checks
+
+- **tasks that could merge or be dropped** — without losing independent verifiability, which
+  is the property `/implement-plan` batches on;
+- **speculative abstraction** — an interface with one implementation, a factory for a single
+  product, a config knob for something the design never varies;
+- **reinvention** — a helper the repository already has, named with its symbol and file. The
+  highest-value finding available here, and the one that most needs evidence;
+- **over-specified verification** — five checks where one proves the behavior. Every step is a
+  command the implementer runs on every batch *and* every fix pass, so a redundant check is
+  paid many times over;
+- **premature generalization** and **layering that adds no boundary**.
+
+It returns `ALREADY_MINIMAL` or `SIMPLIFICATIONS_FOUND`. **`ALREADY_MINIMAL` is a real
+outcome** for a plan written against a tight design — treat it as success, not as an agent that
+failed to find anything, and do not send it back looking harder.
+
+Its findings are bounded on purpose: it may not drop or narrow an agreed requirement, propose a
+different design, remove a test or a safety check, or touch `## Out of scope`. Where the only
+simplification it sees needs the design changed, it says so as an **observation for the human**
+rather than a finding — those observations go into §10's report verbatim, and a shape-changing
+one is a §9 halt, not something you decide.
+
 ## 7. Skip the code reviewers — neither applies yet
 
 `reviewer` is the diff reviewer: correctness, lifetimes, regressions — all of which need code
@@ -120,13 +164,33 @@ hand a document to an agent that will look for off-by-one errors in it.
 ## 8. Adjudicate, then refine — and escalate rather than stop
 
 Accept findings that are technically justified and inside the agreed design; reject the rest
-with a one-line rationale that goes in the report. Send accepted findings to a **fresh
-planner** in refine mode — never patch the plan yourself, and never reuse the `plan-reviewer`
-that produced the findings.
+with a one-line rationale that goes in the report. Adjudicate **both** finding sets in one
+pass, then send everything accepted to a **fresh planner** in refine mode — one refine spawn
+carrying both, never one per lens. Never patch the plan yourself, and never reuse an agent that
+produced findings you are acting on.
+
+**Where the two lenses conflict, you decide, and coverage wins.** A `plan-simplifier` proposal
+that would drop something `plan-reviewer` requires for coverage is rejected — the plan must
+deliver the agreed design first and be small second. Say so explicitly in the report when it
+happens; a rejected simplification with a stated reason is a useful record, and it stops the
+next round proposing it again.
+
+The reverse conflict is rarer and resolves the same way: where a coverage finding would add a
+task the simplifier showed is already served by existing code, the simplifier is right about
+the *mechanism* and the reviewer about the *requirement*. Accept both — the requirement is
+covered by reusing what exists, which is a task, just a smaller one.
+
+Do not average them. Picking a midpoint neither agent proposed is how a plan ends up
+half-covered and half-simplified.
 
 The refine loop gets **2 rounds** of exactly that shape. Reaching the second without a clean
 review ends *that approach*, not this command. Take the next unused rung below, then continue
 with a fresh budget of 2:
+
+**A round is clean when `plan-reviewer` returns `APPROVED`** — a `SIMPLIFICATIONS_FOUND` whose
+every finding you rejected with a rationale does not hold the loop open. Re-run both lenses each
+round; a refined plan is a new plan, and a simplification applied in round 1 can break coverage
+in a way only a fresh `plan-reviewer` will see.
 
 1. **Re-adjudicate, and inspect if the point is contested.** Read the surviving findings
    yourself. A finding that has outlived two refine passes is often one the reviewer is wrong
@@ -173,8 +237,17 @@ A halt is a successful outcome of this command, not a failure of it.
 - **which decisions were the human's and which came from inspection**;
 - the out-of-scope boundaries;
 - the review history and the refine-round count, plus any escalation rungs taken from §8 and
-  the progress ledger behind them;
-- findings **rejected**, each with its rationale;
+  the progress ledger behind them — **both lenses per round**, with `plan-reviewer`'s verdict
+  and `plan-simplifier`'s;
+- **what the simplifier changed** — tasks merged or dropped, abstractions removed, existing code
+  reused instead of rewritten. Give it its own line even when the answer is `ALREADY_MINIMAL`,
+  because "a second lens looked and found nothing" is information about the plan's quality;
+- **the simplifier's observations for the human** — verbatim. These are the things it was
+  forbidden to act on: a requirement that looks expensive for its value, complexity the design
+  forces, a simplification that would need the design changed. They are the most likely thing
+  in this report to change your mind, and the only place they appear;
+- findings **rejected**, each with its rationale — including every simplification rejected for
+  conflicting with coverage (§8);
 - the plan's own `## Open questions`, surfaced rather than buried in the file.
 
 ## 11. Then offer to continue — do not assume
@@ -183,8 +256,8 @@ Ask whether to run `/implement-plan` on the new file. **Default to stopping**: t
 should read the plan before anything is built against it, and a plan nobody has read is a
 weak thing to implement.
 
-Proceed only on an explicit yes. Note when offering that the plan has been reviewed by an
-agent but not yet by them.
+Proceed only on an explicit yes. Note when offering that the plan has been reviewed by two
+agents — one for coverage, one for simplicity — but not yet by them.
 
 **If they want `--commit`, the plan file must be committed first.** That flag's first
 precondition is an empty `git status --porcelain`, and you have just created an untracked plan
@@ -216,8 +289,9 @@ straight away.
 `~/.claude/CLAUDE.md` requires the human to start each phase because each belongs on a
 deliberately chosen model, and rolling forward inside one session would run the next phase on
 whatever model the session happened to be on. Delegation does not have that problem:
-`brainstormer`, `planner` and `plan-reviewer` each pin their own **model and effort** in their
-own frontmatter, so every phase runs on the right one whatever this session is. `/implement-plan`
+`brainstormer`, `planner`, `plan-reviewer` and `plan-simplifier` each pin their own **model and
+effort** in their own frontmatter, so every phase runs on the right one whatever this session
+is. `/implement-plan`
 delegates every phase for the same reason — there is no artifact either command could usefully
 write itself, and the plan, like the code, is a document its reviewer must not have authored.
 
