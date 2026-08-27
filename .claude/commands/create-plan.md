@@ -281,6 +281,32 @@ A halt is a successful outcome of this command, not a failure of it.
   conflicting with coverage (§8);
 - the plan's own `## Open questions`, surfaced rather than buried in the file.
 
+Finally, a **machine-readable metrics block**, last in the report, exactly this shape:
+
+```
+## Run metrics
+plan: plans/NNN-<slug>.md
+tasks: <n>
+wall_clock_min: <n>
+spawns_brainstormer: <n>
+spawns_planner: <n>
+spawns_plan_reviewer: <n>
+spawns_plan_simplifier: <n>
+brainstorm: full|short_circuited
+reviewer_verdict_round1: APPROVED|CHANGES_REQUIRED
+simplifier_verdict_round1: ALREADY_MINIMAL|SIMPLIFICATIONS_FOUND
+findings_raised: <n>
+findings_accepted: <n>
+findings_rejected: <n>
+simplifications_accepted: <n>
+refine_rounds_used: <n>
+escalation_rungs_taken: <n>
+```
+
+Report the real numbers. `simplifications_accepted: 0` over several plans is the evidence for
+changing that phase; a block tuned to look healthy is worth nothing.
+
+
 ## 11. Then offer to continue — do not assume
 
 Ask whether to run `/implement-plan` on the new file. **Default to stopping**: the human

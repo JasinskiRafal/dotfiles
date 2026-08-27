@@ -116,7 +116,57 @@ amendment, where a fresh `planner` reshapes the work **already written in the fi
 inventing work that is not in it, that is a **halt**: the split is a design decision, and it
 is the human's.
 
-Print the batching. Then assemble the warm handoff below — that is the last thing before
+Print the batching. Then read the proportionality table below and **state the tier**, because
+it decides how many reviewers each batch gets. Then assemble the warm handoff.
+
+## Proportionality — review depth scales with the plan, the safety floor does not
+
+A one-task plan and a twenty-task plan do not carry the same risk per batch, and charging them
+the same review depth is wrong in both directions: it makes small work slow and leaves large
+work under-reviewed. **Tier on the task count from §2** — mechanical, printed with the batching,
+never a judgement call mid-run.
+
+| Tier | Tasks | Reviewers per batch | Closing gate (§15) |
+|---|---|---|---|
+| **XS** | 1–2 | 1 correctness `reviewer` | clean rebuild + `verifier`; **no whole-plan `reviewer`** |
+| **S** | 3–6 | 1 correctness `reviewer` + conventions reviewer where the batch falls in its remit | clean rebuild + `verifier` + whole-plan `reviewer` |
+| **M** | 7–12 | as S, and the conventions reviewer runs on every batch that touches source | as S |
+| **L** | 13+ | as M, **plus a second `reviewer` on an interaction lens** | as S, and the whole-plan `reviewer` is told to look for cross-batch interaction first |
+
+**Why the gate loses its whole-plan reviewer at XS.** With one or two batches, "whole-plan
+scope" is the same diff the batch reviewer just read, with the same lens. That is not a second
+opinion, it is the same opinion twice, and it is the one duplicated spawn in this command. The
+`verifier` and the clean rebuild stay at every tier: they answer a different question — does the
+evidence exist, and does it survive a clean tree — and neither is redundant with a review.
+
+**Why L adds a lens rather than a round.** In a long plan the risk is not that a batch is wrong
+in isolation — the batch reviewer catches that at every tier — it is that batch 9 quietly breaks
+what batch 3 built. Give the second `reviewer` exactly that brief: the current batch against
+the *already-reviewed* work of earlier batches, using the earlier-batch file note from §7. Do
+not give it the same correctness brief as the first; two agents with one brief produce one
+opinion and two bills.
+
+**What never scales, at any tier.** These are not depth, they are correctness, and a small task
+does not get a cheaper version of them:
+
+- RED before GREEN, and tests on the host. A one-line change still needs the test that specifies
+  it — that is what the test *is for*, and it is the cheapest check in the run.
+- One independent `reviewer` per batch. Independence is the property the whole loop rests on;
+  one is the floor, not a tier setting.
+- The discrepancy rule, the plan-amendment path, and every §10 halt.
+- The baseline before batch 1 and the clean rebuild at the gate.
+- Read-only git, and the `--commit` carve-out's conditions.
+
+**Do not confuse a bound with a check.** The refine budget, the escalation ladder, and the
+progress ledger are **lazy** — they cost nothing on a batch whose review comes back clean, and
+they are not overhead to be tuned away for small tasks. Tightening them would only make failing
+batches fail sooner, not passing batches finish faster. What costs on the happy path is the
+eager set: the spawns above and the two builds. Tier those; leave the bounds alone.
+
+**State the tier and what it bought.** Print it with the batching, and record in §16 which
+reviewers ran per batch. A tier chosen silently is a tier nobody can evaluate.
+
+Then assemble the warm handoff below — that is the last thing before
 batch 1, and it is what every spawn will be handed.
 
 ## The warm handoff — established once, handed to every spawn
@@ -633,7 +683,8 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
   built, and it is the first thing to check when a batch looks wrong;
 - **any batch where a test was changed rather than added**, with the reason. This should be
   empty; a non-empty entry is the one thing in this report that most needs your eyes;
-- review history per batch, with the **progress ledger** and the escalation rungs taken;
+- review history per batch, with the **progress ledger**, the escalation rungs taken, and
+  **which reviewers ran** — the tier promises a composition, and this is where it is checked;
 - every **plan amendment**: the task, what changed, and the evidence that prompted it. Give
   this its own section — it is the part of the run the human has not read;
 - findings **rejected**, and the rationale for each;
@@ -642,6 +693,40 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
   reminder that they are provisional and the `git rebase -i <base>` command for squashing
   them;
 - the git commands the human may choose to run.
+
+Finally, a **machine-readable metrics block**, last in the report, exactly this shape and these
+keys, one per line, so runs are comparable across weeks and a script can read them:
+
+```
+## Run metrics
+plan: plans/NNN-<slug>.md
+tier: XS|S|M|L
+tasks: <n>
+batches: <n>
+wall_clock_min: <n>
+spawns_test_writer: <n>
+spawns_implementer: <n>
+spawns_reviewer: <n>
+spawns_diagnostic: <n>
+spawns_reconfigured_build: <n>          # must be 0
+baseline: reused|clean_configured
+baseline_suite: pass|fail
+gate_clean_rebuild: pass|fail
+findings_raised: <n>
+findings_accepted: <n>
+findings_rejected: <n>
+refine_rounds_used: <n>                 # 0 means the bound never engaged
+escalation_rungs_taken: <n>
+red_not_demonstrated: <n>
+plan_amendments: <n>
+deferred_checks: <n>
+```
+
+**Report the real numbers, including the embarrassing ones.** `findings_accepted: 0` across a
+whole run is a fact worth knowing — it says that tier's review depth caught nothing on this
+plan, and several such runs are the evidence for tiering it down. A metrics block massaged to
+look healthy destroys the only cheap way to tell whether this loop's cost is buying anything.
+
 
 ## 17. Hard constraints
 
