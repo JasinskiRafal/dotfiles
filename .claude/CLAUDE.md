@@ -88,13 +88,16 @@ in its own frontmatter too**. Either way the phase runs on a model chosen for it
 rather than on whatever the session happened to be on.
 
 That is why `/create-plan` and `/implement-plan` may run several phases in one
-invocation, and why they do it differently. `/create-plan` delegates every
-phase — brainstormer, planner, plan-reviewer — and adjudicates the results.
-`/implement-plan` delegates only what it cannot do itself, which is review:
-a reviewer that wrote the code is not an independent reviewer. It writes the
-code itself, on the model and effort its own frontmatter pins, because handing
-each batch to a cold implementer and paying to rebuild the context was the single
-biggest cost in the loop.
+invocation. Both delegate every phase and adjudicate the results —
+`/create-plan` to brainstormer, planner and plan-reviewer, `/implement-plan` to
+implementer, reviewer, and the rarer debugger, verifier and planner. Neither
+orchestrator writes the artifact its own reviewer will read.
+
+What makes per-batch delegation affordable is that the orchestrator establishes
+the project **once** — the build directory, the incremental build and test
+commands, the layout and conventions — and hands the same brief to every spawn.
+A spawn that re-runs project setup costs more than it saves; re-configuring or
+wiping a configured build tree is forbidden to every agent and reserved to me.
 
 Every agent and every command in this workflow states both `model:` and `effort:`
 explicitly. Neither is left to inherit the session's, and neither should be added

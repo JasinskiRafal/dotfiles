@@ -4,29 +4,34 @@ argument-hint: [--commit] <plan file, e.g. plans/007-uart-dma.md>
 model: opus
 effort: medium
 ---
-Drive the plan file below from its first task to its last. You are the implementer *and* the
-orchestrator: you read the plan, you **write the code yourself**, you delegate the review, you
-adjudicate, you report.
+Drive the plan file below from its first task to its last. You are the orchestrator: you read
+the plan, you **delegate the code to a fresh `implementer`**, you delegate the review to a
+fresh `reviewer`, you adjudicate both, you report.
 
-**You implement in-session. You do not spawn an implementer.** This is deliberate and it is
-the main thing that makes this command fast. A fresh implementer starts cold: it re-reads the
-plan, re-derives the repository layout, and rediscovers the conventions you already know — and
-it does that once per batch, and again per fix pass. You are already holding all of it. Writing
-the batch yourself costs a few edits instead of a whole cold context, and it is why a batch
-here is a matter of minutes rather than a matter of spawns.
+**You delegate implementation. You do not write the batch yourself.** Each batch, and each
+fix pass, goes to a fresh `implementer` — which pins `sonnet` at `medium` effort in its own
+frontmatter, so the implement phase runs on a model chosen for implementing rather than on the
+`opus` this file pins for orchestrating. That split is the point: orchestration and
+adjudication want the stronger model, writing the batch against an already-specified task does
+not.
 
-**What you still delegate is review, and only review.** Not because reviewing is expensive to
-do inline, but because you cannot do it: a reviewer that also wrote the code is not an
-independent second look, it is the author re-reading their own reasoning. Independence is the
-one property here that a subagent supplies and you cannot. Everything else is faster in your
-own context.
+**What you also delegate is review, and for a different reason.** Not cost — you *cannot* do
+it: a reviewer that also wrote the code is not an independent second look, it is the author
+re-reading their own reasoning. Here neither of you wrote it, which makes the independence
+cleaner still.
 
-Three named exceptions, none of them an implementer and none of them writing the batch for
-you: a fresh `debugger` for a failure nobody has explained (§12 rung 1), a fresh `verifier` for
-the closing evidence gate (§15), and a fresh `planner` in amend mode when the plan itself has
-to change (§14) — that last one because §17 forbids *you* from editing the plan beyond its
-checkboxes, and delegating is how that constraint is honoured. All three are rare. The
-per-batch steady state is: you implement, reviewers review.
+Two more delegates, both rare: a fresh `debugger` for a failure nobody has explained (§12 rung
+1) and a fresh `verifier` for the closing evidence gate (§15); plus a fresh `planner` in amend
+mode when the plan itself has to change (§14) — that last one because §17 forbids *you* from
+editing the plan beyond its checkboxes, and delegating is how that constraint is honoured. The
+per-batch steady state is: an implementer implements, reviewers review, you adjudicate.
+
+**What you never do is let a spawn rediscover the project.** A cold implementer's expensive
+half is not writing the code — it is re-deriving the build, the layout and the conventions, once
+per batch and again per fix pass. That is what the **warm handoff** below removes: you establish
+the build directory and the project facts *once*, before batch 1, and hand the same brief to
+every spawn. A spawn that re-runs project setup has cost more than it saved, and the handoff
+section makes that a rule rather than a hope.
 
 This does **not** stop for the human between batches. It runs to the
 end of the plan, or to a halt only the human can clear. A review that will not come clean
@@ -34,16 +39,15 @@ escalates (§12) rather than stopping, and a plan that no longer matches the rep
 amended (§14) rather than abandoned. That autonomy is the reason the rules below are strict
 rather than advisory.
 
-**Cost shape, so it is not a surprise.** Orchestration and implementation both run here, on
-opus at medium effort. Each batch is reviewed by one or two `reviewer` spawns on sonnet at high
-effort. A twelve-task plan needing no refinement is roughly 12–24 reviewer spawns and **zero**
-implementer spawns; a plan needing a refine pass per batch adds one re-review per batch, not a
-second implementer. Prefer a short plan for a first run.
+**Cost shape, so it is not a surprise.** Orchestration and adjudication run here on opus at
+medium effort. Each batch costs **one `implementer` spawn** on sonnet at medium effort, plus
+one or two `reviewer` spawns on sonnet at high effort. A twelve-task plan needing no refinement
+is roughly 12 implementer spawns and 12–24 reviewer spawns; a plan needing a refine pass per
+batch adds one implementer and one reviewer per batch. Prefer a short plan for a first run.
 
 A batch that reaches the escalation ladder (§12) costs more — a diagnosis spawn, then a fix
-pass per surviving finding, all of the fixes still yours. That is the price of not stopping,
-and §12 requires the batch report to name it rather than letting the bill be the first the
-human hears of it.
+spawn per round. That is the price of not stopping, and §12 requires the batch report to name
+it rather than letting the bill be the first the human hears of it.
 
 ## 1. Parse the arguments, then read the plan in full and critique it
 
@@ -96,24 +100,108 @@ amendment, where a fresh `planner` reshapes the work **already written in the fi
 inventing work that is not in it, that is a **halt**: the split is a design decision, and it
 is the human's.
 
-Print the batching, then begin.
+Print the batching. Then assemble the warm handoff below — that is the last thing before
+batch 1, and it is what every spawn will be handed.
+
+## The warm handoff — established once, handed to every spawn
+
+Everything a spawn would otherwise rediscover, you establish **once, before batch 1**, and
+pass verbatim in every `implementer` prompt for the rest of the run. This is the section that
+makes delegation affordable; skipping it turns each batch into a cold project setup.
+
+### The build directory is yours to choose and theirs to reuse
+
+**Find the existing one before considering a new one.** A configured build tree is often
+hundreds of megabytes and minutes of cross-compilation, and it is already on disk. Look for
+it, in this order:
+
+- an existing configured directory — `<dir>/meson-info/`, `<dir>/CMakeCache.txt`,
+  `<dir>/build.ninja`, or a `compile_commands.json` naming its own directory;
+- the directory the repository's own docs use — `README.md`, `CONTRIBUTING.md`, or the build
+  section of its `CLAUDE.md`;
+- only if neither exists: create it, once, with the exact command those docs prescribe.
+
+Where several are configured — a native `build/` beside a cross `build-rpi5/` or a sanitizer
+`build-tsan/` — **name the one this plan's verification needs**, and say why in the batching
+report. Where the plan's tasks need two (a native build plus a cross build, say), name both
+explicitly and label which verification belongs to which. Never leave a spawn to infer it: a
+spawn that guesses configures a third one.
+
+**Then state the incremental command, not the setup command.** The brief gives the build and
+test invocations that reuse the directory as it stands:
+
+| build system | build | test |
+|---|---|---|
+| Meson | `meson compile -C <dir>` | `meson test -C <dir>` |
+| CMake | `cmake --build <dir>` | `ctest --test-dir <dir>` |
+| Cargo / npm / go | the project's own command — these cache in place, no directory to name | likewise |
+
+A repository's README typically documents the **first** build — `meson setup build && meson
+compile -C build`. That first line is a one-time cost that has already been paid, and a spawn
+that copies the recipe verbatim pays it again. The brief exists so the spawn never reads that
+line as an instruction.
+
+### Forbidden to every spawn, and to you
+
+Re-running project setup is not a fix for a confusing build state — it is the most expensive
+thing in the run, and it discards a cache the whole plan depends on:
+
+- **no re-configuring a configured directory** — no `meson setup` on an existing one, no
+  `--wipe`, no `--reconfigure`, no `cmake` fresh configure, no `--fresh`;
+- **no deleting or recreating a build directory** — `rm -rf <dir>` is destructive and belongs
+  to the human under §17's destructive tier, whatever the build system;
+- **no second directory** under a new name because the first looked wrong;
+- **no changing the configured options** (`-Daxelera=`, `-DCMAKE_BUILD_TYPE=`, a different
+  `--cross-file`) — that reconfigures the tree for every later batch. A task that genuinely
+  needs different options needs a *second named directory in the brief*, decided here by you,
+  not improvised mid-batch.
+
+If a spawn reports that the build directory is genuinely unusable — a toolchain change, a
+corrupt cache, options that contradict the task — that is **not** for it to repair. It reports
+and stops. You decide: amend the brief and re-run the batch, or halt and put the exact
+`meson setup --wipe` / `rm -rf` command in the report for the human, who owns it.
+
+### What the brief contains
+
+Assemble it once and reuse it. Every `implementer` prompt carries, verbatim:
+
+1. **the plan path**, and the specific tasks or findings this spawn owns;
+2. **the build directory or directories**, and the incremental build and test commands above;
+3. **the project facts you already established** — where the source lives, which docs are
+   authoritative for conventions, the guideline pages that apply. Enough that the spawn need
+   not go looking; not so much that it stops reading the plan;
+4. **the files earlier batches already touched**, so it leaves them alone (§7's note);
+5. **the setup prohibitions above**, stated rather than referenced — the spawn does not have
+   this file.
+
+Re-derive nothing per batch. When a batch teaches you a project fact worth having — a build
+target that is slow, a test that needs a flag, a directory the plan misnames — add it to the
+brief so the next spawn starts with it. The brief only grows.
+
+**Print the brief once, when you assemble it**, so the human can see what every spawn will be
+told. Then print only what changed.
 
 ## 3. The per-batch loop
 
 ```
-YOU implement the batch  (its tasks, in place, then run its verification)
-  ├─ the plan contradicts the repository ──────────────► AMEND the plan (§14), re-do
-  ├─ a verification failure you cannot explain ────────► ESCALATE (§12)
-  └─ record the changed-file list yourself — it is the review scope (§7)
+fresh implementer  (batch mode: the brief + this batch's tasks; it verifies, it reports)
+  ├─ it reports a plan/repository discrepancy ─────────► AMEND the plan (§14), re-spawn
+  ├─ it reports an unexplained verification failure ───► ESCALATE (§12)
+  ├─ it reports the build directory unusable ──────────► fix the brief, or halt (warm handoff)
+  └─ take the changed-file list from ITS report — that is the review scope (§7)
 fresh reviewer      ┐  spawned in ONE message, both read-only
 conventions reviewer┘  (only where the project defines one, and it applies — §6)
 adjudicate every finding
-  ├─ accepted findings? → YOU fix them → fresh re-review
+  ├─ accepted findings? → fresh implementer in FIX mode → fresh re-review
   │    └─ 2 rounds and still not clean ────────────────► ESCALATE (§12), budget resets
   │         └─ ladder used up, two rounds no progress ─► STOP and report (§13)
-commit the batch  (only with --commit; never before review passes)
+commit the batch  (only with --commit; never before review passes; yours alone)
 emit batch report, continue without waiting
 ```
+
+Every spawn on that diagram is **fresh** and carries **the same warm handoff brief**. Fresh is
+what keeps the review independent and stops a fix pass inheriting the reasoning that failed;
+the shared brief is what stops fresh meaning cold.
 
 The three arrows that used to read HALT are what §12–§14 exist for. A review that will not
 come clean and a plan that contradicts the repository are both **work this loop can still
@@ -122,24 +210,37 @@ finishing. What ends the run is §13's ledger — the loop having demonstrably r
 — not a counter reaching three. The halts left in §10 are the ones no amount of agent work
 can resolve.
 
-## 4. A fresh reviewer for every review
+## 4. A fresh agent for every implement, fix, and review
 
-You wrote the code, so you can never be its reviewer — that is the whole reason review is the
-one thing delegated here. And never reuse a reviewer across a refine iteration: a reviewer that
-has already approved its own reasoning is not an independent second look either. Every review
-spawn is a new agent with no memory of the last one.
+**Every spawn is new, with no memory of the last one.** That holds in all three roles and for
+a different reason in each:
 
-Correspondingly: **do not spawn an `implementer` from this command**, not for a batch, not for
-a fix pass, not for a "small" task you would rather hand off. The agent exists for the
-`feature-development` skill, which has no warm orchestrator to do the work. Here you are that
-orchestrator, and handing your own context away and paying to rebuild it is exactly the cost
-this command was rewritten to remove.
+- **implement** — a fresh `implementer` per batch, on sonnet at medium effort. It gets the
+  brief, so fresh costs almost nothing.
+- **fix** — a fresh `implementer` in fix mode, never the one whose work drew the findings. An
+  agent asked to fix its own code argues with the finding as often as it addresses it.
+- **review** — a fresh `reviewer`, and never the reviewer from the previous refine round: one
+  that has already approved its own reasoning is not an independent second look either.
+
+**You write no production code.** Not a batch, not a fix pass, not a one-line change you could
+make faster yourself. The moment you edit source, you become the author of code a `reviewer`
+you spawned is about to review on your behalf, and the independence the whole loop rests on is
+gone — quietly, with nothing in the report to show it. Your two hands on the tree are the plan
+file's checkboxes (§17) and `git add`/`git commit` under `--commit` (§9).
+
+The temptation is strongest exactly where it is most expensive: a finding that looks like a
+typo, on the third refine round, at the end of a long batch. Spawn the fix.
 
 ## 5. Spawn the reviewers in one message
 
 They are read-only, so they cannot conflict and they should run concurrently. Spawn both in a
-single message. Never edit files while a review of those files is in flight — finish writing,
-then review what you wrote.
+single message.
+
+**Never overlap a writing spawn with a reading one.** The `implementer` must have reported and
+stopped before the reviewers go out, and no fix spawn starts while a review of those same files
+is still in flight. One writer at a time, and never a writer beside a reader: a reviewer that
+reads a file mid-edit reports findings against a state that no longer exists, and two
+implementers in the same tree corrupt each other's diff.
 
 ## 6. The second review angle is conditional
 
@@ -159,16 +260,19 @@ found.
 
 `git diff` shows the whole working tree against `HEAD`, so by the third batch it contains
 the first two. Narrowing it with git is forbidden. Give every reviewer three things
-instead: the batch's task text, **the changed-file list you kept while implementing**, and a
+instead: the batch's task text, **the changed-file list from the implementer's report**, and a
 note naming the files earlier batches already touched whose changes are reviewed and out of
 scope. A finding against an already-reviewed file is answered with that note, not a fix.
 
-Keeping that list is now your own bookkeeping rather than something you read out of a
-subagent's report, so **write it down as you go** — every path you create or edit in the
-batch, at the moment you touch it. Do not reconstruct it afterwards from `git status`: that
+That list comes out of the `implementer`'s **Files changed** section — it is required to report
+one, and it is the authority on its own diff. Do not reconstruct it from `git status`: that
 picks up anything the human left in the tree and anything an earlier batch touched, and a
-review scoped to it will spend its findings outside the batch. If you genuinely lose track,
-say so in the batch report rather than shipping a scope you invented.
+review scoped to it will spend its findings outside the batch. Carry the list forward across
+fix passes too — a fix spawn's report adds to the batch's list, it does not replace it.
+
+If a spawn returns without a usable **Files changed** section, that is a defective report, not
+a licence to guess: re-spawn it for the list, or say in the batch report that the scope is
+uncertain and why. Never ship a review scope you invented.
 
 **With `--commit` active this gets simpler.** Every approved batch is already a commit, so
 from batch 2 onward the scope is exactly `HEAD~1..HEAD`, and you tell the reviewer so. The
@@ -245,21 +349,27 @@ project batches such checks into one pass at the end of a plan series, follow th
 
 ## 12. The escalation ladder — what a reached bound does instead of stopping
 
-A refine loop gets **2 rounds** of the straightforward thing: you fix the accepted findings,
-then a fresh re-review. Reaching the second without a clean review ends *that approach*, not
-the batch. Take the next unused rung below, then continue with a fresh budget of 2.
+A refine loop gets **2 rounds** of the straightforward thing: a fresh `implementer` in fix
+mode on the accepted findings, then a fresh re-review. Reaching the second without a clean
+review ends *that approach*, not the batch. Take the next unused rung below, then continue with
+a fresh budget of 2.
 
-The budget is 2 rather than 3 because a fix round no longer costs a cold implementer spawn —
-you are fixing in place, in context, so a round that was going to work usually works on the
-first pass. A second identical attempt is already weak evidence; a third was mostly buying
-time for an agent that had to re-learn the batch each round, and there is no such agent now.
+The budget is 2 rather than 3 because each round costs a spawn, and because a second identical
+attempt is already weak evidence. Two fix spawns having failed on the same findings says the
+*assignment* is likely wrong rather than the execution — which is what rung 2 exists to test.
+Buying a third attempt buys another cold pass at a task that may not be satisfiable.
+
+**Every escalation spawn gets the warm handoff brief too**, plus the surviving findings and
+what the previous rounds already tried. A diagnosis spawn that begins by re-configuring the
+build directory has spent the escalation on the thing the brief was written to prevent.
 
 1. **Diagnose before fixing again.** Spawn a fresh `debugger` for a failure, or a fresh
    `verifier` for a check whose output nobody has explained, with the surviving findings and
-   the exact command. Both are diagnostic: they establish the root cause, they do not
-   implement the batch — you still write the fix. Trying the same fix a third time is not an
-   escalation, it is the same rung again, and two identical attempts having failed is evidence
-   the assignment is wrong rather than the execution.
+   the exact command. Both are diagnostic: they establish the root cause, they do not implement
+   the batch — the fix that follows is a fresh `implementer` in fix mode, carrying the
+   diagnosis. Trying the same fix a third time is not an escalation, it is the same rung again,
+   and two identical attempts having failed is evidence the assignment is wrong rather than the
+   execution.
 2. **Re-adjudicate, then amend if the task is the defect.** Read the surviving findings again
    yourself, as in §8. A finding that has outlived two fix attempts is frequently one the
    reviewer is wrong about, or one whose fix the task forbids: reject it with a rationale that
@@ -279,7 +389,7 @@ did when at least one of these is true:
 - an open finding was resolved, or rejected with a rationale;
 - the set of open findings *changed* — one appeared, one disappeared, one turned out to be a
   different defect. The same set restated in new words is not a change;
-- the batch's changed-file list (§7) grew — you actually edited something;
+- the batch's changed-file list (§7) grew — a spawn actually edited something;
 - a verification command produced output it had not produced before, **including a new
   failure** — a different failure is information;
 - the plan was amended (§14).
@@ -333,11 +443,14 @@ already includes.
 After the last batch, spawn a fresh `verifier` for the evidence gate and a fresh `reviewer`
 with whole-plan scope. Claim completion only when both come back clean.
 
-If either does not, adjudicate its findings as in §8 and run a fix pass, then re-run the
-gate. The gate gets its own budget of **2 rounds**, counted separately from any batch's, plus
-its own copy of §12's two-rung ladder and §13's ledger: a reached bound here escalates exactly
-as it does inside a batch, and a gate finding that turns out to be a plan defect amends the
-plan through §14 like any other. The fixes are yours, as everywhere else in this command.
+Both get the warm handoff brief, so the gate does not begin by rediscovering the build.
+
+If either does not come back clean, adjudicate its findings as in §8 and send them to a fresh
+`implementer` in fix mode, then re-run the gate. The gate gets its own budget of **2 rounds**,
+counted separately from any batch's, plus its own copy of §12's two-rung ladder and §13's
+ledger: a reached bound here escalates exactly as it does inside a batch, and a gate finding
+that turns out to be a plan defect amends the plan through §14 like any other. A gate fix is a
+spawn like every other fix in this command — §4 has no exception for the last one.
 
 The gate stops the run only on §13's terms — the ladder used up and two consecutive
 unproductive rounds. By the time the gate runs, nearly all of the run's work is already spent,
@@ -349,7 +462,14 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
 ## 16. The final report
 
 - the plan path, and the batching used;
+- **the warm handoff brief as finally stated** — the build directory or directories, the
+  incremental commands, and anything added to it mid-run. It is what every spawn was told, so
+  it is the first thing to check when a batch went wrong;
 - batches completed, and the files changed by each;
+- **the spawn count** — implementers, reviewers, and any diagnostic spawns — plus any spawn
+  that reported configuring or re-configuring a build directory. That last one should be zero
+  after batch 1; if it is not, say which spawn and why, because it is the cost this shape
+  exists to avoid;
 - verification evidence — real command output, not claims;
 - review history per batch, with the **progress ledger** and the escalation rungs taken;
 - every **plan amendment**: the task, what changed, and the evidence that prompted it. Give
@@ -382,29 +502,36 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
 - Do not edit the plan file yourself beyond ticking its checkboxes. A substantive change goes
   through a delegated `planner` in amend mode (§14), inside that section's boundary, and is
   reported.
-- **Do not spawn an `implementer`, and do not spawn a general-purpose agent to stand in for
-  one.** The code in this command is yours to write (§4). The only agents this command spawns
-  are `reviewer` and any project conventions reviewer every batch, and `debugger`, `verifier`
-  and `planner` at the three rare points §12, §15 and §14 name.
+- **Write no production code.** Every batch and every fix pass is a fresh `implementer` spawn
+  (§4). Do not stand a general-purpose agent in for one either — `implementer` pins the model,
+  the effort and the discipline this phase needs, and a general-purpose agent pins none of
+  them. The agents this command spawns are: `implementer` every batch and every fix,
+  `reviewer` and any project conventions reviewer every review, and `debugger`, `verifier` and
+  `planner` at the three points §12, §15 and §14 name.
+- **Never let a spawn re-run project setup.** The warm handoff names the build directory and
+  the incremental commands; re-configuring, wiping, deleting or duplicating that directory is
+  forbidden to every spawn and to you. `rm -rf <build dir>` and `meson setup --wipe` are
+  destructive-tier commands: they go in the report for the human, not into a spawn's prompt.
 
-## Why implementing in-session does not break the step-boundary rule
+## Why running every phase unattended does not break the step-boundary rule
 
 `~/.claude/CLAUDE.md` requires the human to start each phase because **each phase belongs on a
 deliberately chosen model**, and rolling forward inside one session would run the next phase
 on whatever model the session happened to be on. That is the property the boundary protects —
 not the ceremony of a subagent.
 
-This command satisfies it two ways at once. Review runs on a model this repository chose for
-review: `reviewer` pins `sonnet` at `high` effort in its own frontmatter, whatever this session
-is. And implementation runs on a model this repository chose for implementation, because a
-slash command pins its own model too — the frontmatter at the top of this file sets `opus` at
-`medium` effort, and that is what you are running on right now. Nothing here inherits an
-accidental model.
+Every phase here runs on a model chosen for it, in its own frontmatter. Orchestration and
+adjudication: `opus` at `medium`, pinned at the top of this file, which is what you are running
+on right now. Implementation: `sonnet` at `medium`, pinned in `implementer.md`. Review: `sonnet`
+at `high`, pinned in `reviewer.md`. Diagnosis, verification and plan amendment likewise, in
+`debugger.md`, `verifier.md` and `planner.md`. Nothing in this command inherits an accidental
+model, and the three phases that used to share one now do not.
 
-What the old shape bought with a per-batch `implementer` spawn was a *different* model for the
-implement phase. What it paid was a cold context per batch and per fix pass. Since a command
-can pin its own model, the boundary is honoured without paying that, and the payment is the
-whole reason this command was slow.
+**Delegation is what buys that, and the warm handoff is what makes it affordable.** The cost of
+a per-batch spawn was never the model — it was the cold start: re-configuring a 500 MB build
+tree, re-reading the docs, re-deriving the layout, once per batch and again per fix pass. The
+handoff section moves all of that to once per run. What is left per spawn is reading the plan
+and writing the batch, which is the work.
 
 The rule that has not moved: **do not roll from this command into the next phase yourself.**
 When the plan is done, this command stops and reports. What happens next — another plan,

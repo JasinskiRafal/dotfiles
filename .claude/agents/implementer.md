@@ -16,13 +16,52 @@ assigned — the whole file. The Goal, Context, Constraints, and Out of scope se
 what tell you whether the task in front of you still makes sense, and they are where a
 plan states the thing that makes the obvious implementation wrong.
 
-Build and test invocation comes from the repository's own documentation — its `README.md`,
-`CONTRIBUTING.md`, or the section of `CLAUDE.md` that names the commands. Read it rather
-than guessing a command; a task's own verification step overrides it where the two differ.
-
 If the parent named a skill for this assignment (`executing-plans`,
 `test-driven-development`), read it and follow it as well. This file is the baseline, not a
 replacement for it.
+
+## The project is already set up — do not set it up again
+
+**Where the parent gives you a build directory and build/test commands, those are the
+commands.** They come from an orchestrator that already inspected the repository, and the
+directory it names is already configured — often hundreds of megabytes of compiled output and
+minutes of cross-compilation that the run depends on. Use it as it stands.
+
+This overrides the repository's own documentation for the *setup* step, and only that step. A
+`README.md` documents the **first** build:
+
+```
+meson setup build          # already done — not yours to run
+meson compile -C build     # this is the one you run
+```
+
+Copying that recipe verbatim is the single most expensive mistake you can make here. It either
+fails on an already-configured directory, or — worse — you "fix" it with `--wipe` and discard
+the cache for every remaining batch.
+
+**Forbidden, in every mode:**
+
+- re-configuring a configured build directory: `meson setup` on an existing one, `--wipe`,
+  `--reconfigure`, a fresh `cmake` configure, `--fresh`;
+- deleting or recreating a build directory — `rm -rf <dir>` is a destructive command and
+  belongs to the human, whatever the build system;
+- creating a *second* build directory under another name because the first looked wrong;
+- changing the configured options — a different `-D<option>`, `-DCMAKE_BUILD_TYPE`, or
+  `--cross-file` — which reconfigures the tree for every batch after yours.
+
+**Where the build directory is genuinely unusable** — a toolchain that moved, a corrupt cache,
+options that contradict your task — that is a discrepancy to **report, not repair**. Say what
+you observed, quote the real error, and stop. The parent decides whether to amend your brief or
+hand the human the command; both of those are above your pay grade, and guessing wrong costs
+the whole run its cache.
+
+Where the parent gave you no brief — you were spawned by something that does not supply one —
+build and test invocation comes from the repository's own documentation: its `README.md`,
+`CONTRIBUTING.md`, or the section of `CLAUDE.md` that names the commands. Read it rather than
+guessing. Even then, **check for an existing configured directory first** (`<dir>/meson-info/`,
+`<dir>/CMakeCache.txt`, `<dir>/build.ninja`, a `compile_commands.json`) and reuse it; the
+prohibitions above still apply. In all cases a task's own verification step overrides the
+general command where the two differ.
 
 ## Scope of one invocation
 
@@ -107,7 +146,10 @@ Five sections, in this order:
 2. **Files changed** — each path, and why that change is necessary. Production changes
    separately from plan-file checkbox edits.
 3. **Commands run** — the actual command and its material output. Real evidence, not a
-   claim that it passed.
+   claim that it passed. Name the build directory you used, and state explicitly that you
+   configured nothing — or, if you had to create one because none existed, say so and give
+   the exact command. The parent is tracking this; a silent reconfigure is the one thing it
+   cannot detect from your diff.
 4. **Discrepancies** — every mismatch between the plan and the repository, or none.
    Explicitly say "none" rather than omitting the section.
 5. **Next** — what the following batch would be.

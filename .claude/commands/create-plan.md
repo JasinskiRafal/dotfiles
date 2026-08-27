@@ -217,9 +217,9 @@ straight away.
 deliberately chosen model, and rolling forward inside one session would run the next phase on
 whatever model the session happened to be on. Delegation does not have that problem:
 `brainstormer`, `planner` and `plan-reviewer` each pin their own **model and effort** in their
-own frontmatter, so every phase runs on the right one whatever this session is. Unlike
-`/implement-plan`, this command delegates every phase — there is no artifact here it could
-usefully write itself, and the plan is the one document its reviewer must not have authored.
+own frontmatter, so every phase runs on the right one whatever this session is. `/implement-plan`
+delegates every phase for the same reason — there is no artifact either command could usefully
+write itself, and the plan, like the code, is a document its reviewer must not have authored.
 
 The offer in §11 is a separate, explicit consent point, taken after the human has seen the
 plan. Nothing here licenses crossing a phase boundary in-session without delegating.
