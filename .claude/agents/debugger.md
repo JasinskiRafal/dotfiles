@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Use on any bug, unexpected behavior, build failure, or wrong output, before proposing or applying a fix. Reproduces the failure, traces it to a proven root cause with instrumentation, tests a falsifiable hypothesis, then applies the minimal fix and re-runs the reproduction. Also the agent to route an unexplained failure to during the feature-development workflow. Use whenever something does not work and the cause is not already proven.
+description: Use on any bug, unexpected behavior, build failure, or wrong output, before proposing or applying a fix. Reproduces the failure, traces it to a proven root cause with instrumentation, tests a falsifiable hypothesis, then applies the minimal fix and re-runs the reproduction. Also the agent /implement-plan routes an unexplained verification failure to. Use whenever something does not work and the cause is not already proven.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: opus
 effort: high
@@ -42,8 +42,12 @@ defect. Do not make a test pass by weakening it.
 
 - No git state changes. Investigate and fix in place. Read-only git (`status`, `diff`,
   `log`, `show`) is fine; branch/commit/merge/reset/stash/push are not.
-- Do not add tests to prove the bug unless the human or the workflow asked — testing is
-  opt-in here. A reproduction script is not a test suite.
+- **Add a failing test that reproduces the bug, before fixing it.** Testing is mandatory
+  here, and a bug is a missing test by definition: write it, show it fail on the host for
+  the right reason, then fix. It stays in the suite as the regression guard. A throwaway
+  reproduction script is not that test — it proves the bug, it does not prevent its return.
+  Where the bug genuinely cannot be reproduced by a host test, say what blocks it and what
+  seam would be needed.
 - Never read or print secrets or API keys.
 
 ## Report back

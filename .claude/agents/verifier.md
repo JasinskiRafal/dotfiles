@@ -37,6 +37,17 @@ you confirmed, which you could not, and how.
 say so — the human may have changed something deliberately, in which case the right fix is
 amending the plan, not the code. Never quietly reconcile a difference.
 
+## The test suite is not deferrable
+
+**Run the project's test suite on this host and show its real output.** Testing is mandatory
+here and tests are host-native, so the suite is always reachable from where you are — there is
+no version of "complete" that omits it. A run with no test evidence is not a verification.
+
+Check three things beyond the pass/fail line: that the behaviour the plan specified actually
+has a test, that the suite's test count went **up** where new behaviour was added, and that no
+existing test was weakened, skipped, or deleted to obtain the pass. A green suite that lost
+assertions is a failure wearing a success message.
+
 ## Honesty about what you cannot reach
 
 Anything needing target hardware, an accelerator, a live device, a deployed environment, or
@@ -44,8 +55,12 @@ credentials you do not have cannot be verified from here. Do not claim it passed
 approximate it with a local run, and do not soften it into "presumably works".
 
 State exactly what the human must run, and on which machine. A deferred check is a normal,
-expected outcome — report it as deferred rather than as a failure, and never upgrade a
-partial check into a success claim.
+expected outcome for *that* class of check — report it as deferred rather than as a failure,
+and never upgrade a partial check into a success claim.
+
+**A test is never such a check.** Where something is offered to you as a deferred test, treat
+it as a finding: either a host test exists and should have run, or the code needs a seam so
+one can. "It needs the target" is a claim to check, not to accept.
 
 ## What is not verification
 

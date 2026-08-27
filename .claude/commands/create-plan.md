@@ -119,6 +119,11 @@ no code, and nothing with a lifetime.
   an unrunnable step costs a mid-run plan amendment at best, and work done against a step
   nobody could check at worst;
 - **missing constraints** — target, dependencies, the project rules the work must satisfy;
+- **tests** — every task that changes behaviour names the test that proves it, the host
+  command that runs it, and (where the behaviour is hardware-coupled) the seam that makes it
+  host-testable at all. Testing is mandatory on this project, so a task verified only by
+  "builds clean" or "runs on target" is under-verified, and a plan that leans on an on-target
+  check in place of a host test is a defect;
 - **scope creep** — anything beyond the agreed design, and anything in `## Out of scope`
   contradicted by a task;
 - **format** — tasks are `### Task N — …` headings under `## Tasks`, so `/implement-plan`

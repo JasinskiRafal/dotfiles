@@ -62,13 +62,37 @@ or secret-bearing configuration. If a secret is exposed accidentally, tell the
 human that it was exposed, do not repeat or print it, and continue without
 using it.
 
-## Testing is opt-in
+## Tests are mandatory, written first, and run on the host
 
-Do not introduce tests or use test-driven development unless the human asks for
-it explicitly, invokes `$test-driven-development`, or an approved plan
-explicitly requires a test. This workflow can cover embedded targets, where a
-test harness may cost more than the code under test. Still run the explicit
-verification appropriate to completed work before claiming it works.
+Tests are part of the code, not an add-on to it. Every behavior an agent
+implements arrives with a test that proves it. There is no opt-in flag, no
+"unless the plan requires it", and no task too small — a change without a test is
+an unfinished change.
+
+Test-first, and prove RED. The order is not negotiable: write the test for one
+behavior, run it and show it fail with real output, then make the smallest
+production change that turns it green, then re-run and show it pass. A test that
+has never failed has not been shown to test anything.
+
+RED that cannot be demonstrated is a hard halt. If the test passes before the
+code exists, either the behavior is already implemented — a plan discrepancy — or
+the test is not testing what it claims. Both need the human.
+
+Tests run on this host, directly: natively compiled and executed by the project's
+test runner on this machine, in one command the human can re-run. Never
+cross-compiled to a target, flashed to a device, or run inside a container,
+emulator, simulator, or over a network.
+
+This is why tests are affordable here rather than a reason they are not. Embedded
+targets are exactly what makes on-target testing expensive, so logic belongs
+behind a host-testable seam and the target-only part stays thin. Where code
+cannot be tested on the host, the design is the defect: say so and treat it as a
+design question for the human.
+
+A test is never a deferred check. Deferral is for what this machine genuinely
+cannot do — reading a sensor, driving a peripheral, measuring real timing — and
+such a check is always additional to a host test of the same logic, never a
+replacement for one.
 
 ## Workflow selection
 
@@ -147,6 +171,14 @@ verification and show the material result. If verification requires unavailable
 hardware, credentials, or access, state the remaining check precisely instead
 of claiming success.
 
-Reusable skills live in `~/.agents/skills`. Invoke one explicitly in Codex with
-`$skill-name`, or describe the task so Codex can select the matching guided
-phase.
+Skills live in `~/.agents/skills` and are invoked explicitly with `$skill-name`.
+Three are orchestrators — `$create-plan`, `$implement-plan`,
+`$implement-plan-commit` — and two are disciplines a run depends on:
+`$systematic-debugging` and `$test-driven-development`.
+
+The per-phase skills that used to mirror each step are gone. Every phase now
+lives in the agent that runs it, under `~/.codex/agents`, pinned to its own
+model and reasoning effort, and reached through an orchestrator. Do not recreate
+a phase as a skill: a skill is a route that can be taken *instead* of the
+orchestrator, which is how the old per-phase skills drifted into contradicting
+the workflow they were meant to support.

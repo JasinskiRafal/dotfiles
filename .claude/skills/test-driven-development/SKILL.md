@@ -1,21 +1,35 @@
 ---
 name: test-driven-development
-description: Use ONLY when the human explicitly asks for test-driven development by name, or when a plan task explicitly calls for a test. This skill is opt-in and off by default because this project includes embedded targets where a test harness can cost more than the code under test. When invoked, it enforces the write-failing-test-first discipline. Do NOT trigger this on your own initiative.
+description: The write-failing-test-first discipline this project runs on. Testing is mandatory here and tests run natively on the host, so this is the default cycle for any behaviour change, not an opt-in mode. Read it whenever writing a test or turning one green; /implement-plan enforces it per batch via test-writer then implementer.
 ---
 
-# Test-Driven Development (opt-in)
+# Test-Driven Development
 
-This project does **not** test by default. Only use this skill when the human
-has explicitly asked for it, because on embedded targets the toolchain to make a
-piece of code testable can be larger and more expensive than the code itself.
-When the human decides a given piece is worth testing, this is how to do it well.
+**This is the default cycle, not an opt-in mode.** Tests are part of the code on
+this project: every behaviour arrives with a test that proves it, and the test
+comes first. There is no task too small and no "unless the plan asks".
 
-## Before writing a test, confirm it's worth it
+## Tests run on this host, directly
 
-Briefly check with the human (or with the plan) that this unit is one they want
-tested — e.g. pure logic, a protocol parser, a state machine — rather than
-hardware-coupled code where a test rig would dwarf the code. If it's the latter,
-say so and suggest a manual/on-target check instead.
+Natively compiled, executed by the project's own test runner on this machine, in
+one command a human can re-run. Never cross-compiled to a target, flashed to a
+device, or run inside a container, emulator, simulator, or over a network.
+
+Reuse the already-configured build directory and its incremental command
+(`meson test -C <dir>`, `ctest --test-dir <dir>`). Never re-configure it, never
+`--wipe`, never create a second one.
+
+## Untestable on the host means the design is wrong — find the seam
+
+Hardware-coupled code is the normal case here, and the normal answer is a
+**seam**: the logic behind an interface you can test natively, with the
+register-poking part left thin enough that its correctness is obvious. Look for
+that seam before concluding anything is untestable.
+
+Only when no seam exists without changing the agreed design do you stop: say what
+blocks the host test, name the seam you would need, and let the human decide. An
+on-target or manual check is an **addition** to a host test, never a substitute —
+"it needs the target" is a claim to check, not one to accept.
 
 ## The cycle
 
@@ -37,5 +51,6 @@ Repeat one behavior at a time.
 ## Boundaries
 
 - Version control stays with the human — do not commit tests for them.
-- When done, run the suite and show the passing output
-  (`verification-before-completion`).
+- When done, run the suite and **show the real passing output**. Evidence before
+  assertions — a claim that the tests pass is not the same as the output that
+  proves it.

@@ -81,9 +81,19 @@ vague — split it or sharpen it.** The implementer will actually run these comm
 hand-wave here becomes a mid-run plan amendment at best, after work has been done against
 it.
 
-Verification is things like "builds clean", "the command reports X", "the service answers on
-that port", "runs on target". **No test tasks unless the design explicitly calls for them** —
-testing is opt-in unless the project says otherwise.
+**Every task that changes behavior names its test.** Testing is mandatory here, so a task's
+verification is the test that proves the behavior — the test file, what it asserts, and the
+host command that runs it (`meson test -C <dir>`, `ctest --test-dir <dir>`, or the project's
+own). Verification like "builds clean" or "the service answers on that port" is a useful
+*additional* check and never the only one.
+
+Write tasks so the test is possible: if a behavior can only be checked on target hardware,
+the task needs a **seam** — the logic behind a host-testable interface — and the seam is part
+of the task, not an afterthought. Where no seam exists without changing the agreed design,
+raise it as an open question rather than planning a task nobody can verify.
+
+A check that genuinely needs hardware — a sensor reading, a peripheral, real timing — is a
+deferred check named alongside the host test, never instead of it.
 
 ## Record the provenance of decisions
 

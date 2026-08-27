@@ -28,6 +28,18 @@ once code exists. Your subject is a document and whether it can be executed.
 in the plan, and nothing appears that the design did not agree. A task nobody asked for is a
 finding of the same weight as a missing one.
 
+**Every behavioural task names its test — `blocking` when absent.** Testing is mandatory on
+this project and tests run natively on the host, so a task that changes behaviour must name
+the test that proves it: the test file, what it asserts, and the host command that runs it.
+A task whose only verification is "builds clean" or "runs on target" is under-verified — those
+are additional checks, never the only one.
+
+Also check that the test is *possible*. Where a behaviour can only be observed on target
+hardware, the task needs a **seam** — the logic behind a host-testable interface — and that
+seam must be part of the task rather than assumed. A plan that quietly relies on an on-target
+check in place of a host test is a `blocking` finding, and a plan that needs a design change
+to become testable is an open question for the human, not something to wave through.
+
 **Verifiability — the check that pays for itself.** Every task must state a command and its
 expected result. An implementer will actually run these, so a step reading "verify it works",
 "check the output looks right", or naming no command at all forces a mid-run plan amendment

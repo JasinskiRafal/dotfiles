@@ -57,7 +57,11 @@ No task breakdown, no file-by-file plan, no step ordering. That is the `planner`
 producing it here yields a plan nobody agreed to and a design nobody reviewed. Stop at the
 shape of the solution.
 
-Do not assume tests are wanted — testing is opt-in unless the project says otherwise.
+Tests are mandatory on this project and run on the host, so **testability is a design
+constraint, not a later concern.** For each approach you propose, say how its behavior gets
+tested natively — and where the answer needs a seam between logic and hardware, make that
+seam part of the proposal. An approach that can only be verified on target hardware is a
+worse approach here, and saying so is part of the tradeoff.
 
 ## Report back
 

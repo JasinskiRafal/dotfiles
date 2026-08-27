@@ -1,14 +1,27 @@
 ---
 name: test-driven-development
-description: Run test-driven development only when the human explicitly asks for it or an approved plan explicitly requires a test. Use for pure logic, parsers, and state machines; avoid hardware-coupled work where the harness outweighs the code.
+description: The write-failing-test-first discipline this workflow runs on. Testing is mandatory and tests run natively on the host, so this is the default cycle for any behavior change, not an opt-in mode. Hardware-coupled code gets a host-testable seam rather than an exemption.
 ---
 
-# Test-driven development (opt-in)
+# Test-driven development
 
-This workflow does not add tests by default. First confirm that the selected
-unit is worth testing: pure logic, a protocol parser, or a state machine are
-good candidates. For hardware-coupled code where a rig would dwarf the unit,
-explain that and suggest a manual or on-target check instead.
+This is the default cycle, not an opt-in mode. Tests are part of the code: every
+behavior arrives with a test that proves it, and the test comes first.
+
+Tests run on this host, directly — natively compiled and executed by the
+project's own test runner, in one command the human can re-run. Never
+cross-compiled to a target, flashed to a device, or run in a container, emulator,
+simulator, or over a network. Reuse the already-configured build directory and
+its incremental command (`meson test -C <dir>`, `ctest --test-dir <dir>`); never
+re-configure it, `--wipe` it, or create a second one.
+
+Hardware-coupled code is the normal case here, and the normal answer is a seam:
+the logic behind an interface you can test natively, with the register-poking
+part left thin enough that its correctness is obvious. Look for that seam before
+concluding anything is untestable. Only when no seam exists without changing the
+agreed design do you stop — say what blocks the host test, name the seam needed,
+and let the human decide. An on-target or manual check is an addition to a host
+test, never a substitute.
 
 For each desired behavior:
 

@@ -22,5 +22,5 @@ demonstrated.
    rerun the reproduction and show the result.
 
 Never change Git state. When verification has passed, end with `Debugging
-complete` and stop; suggest `$verification-before-completion` only as the next
+complete` and stop; show the material output of the re-run reproduction as the
 human-chosen phase.

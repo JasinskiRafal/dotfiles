@@ -125,9 +125,22 @@ once when assembled, then print only what changed.
 
 For each batch in order:
 
-1. Spawn a fresh `batch-implementer` in batch mode with the full plan path,
-   exact task text, pre-existing-change note, and earlier-batch file note.
-2. Require its commands and material output plus an authoritative changed-file
+1. Spawn a fresh `test-writer` with the brief, the plan path, and the batch's
+   behaviors. Require the tests it wrote, the **host** command it ran, and the
+   real failing output proving RED. Then check its verdict:
+   - RED demonstrated: pass the failing output and test paths to step 2.
+   - The test passed before the code existed (`RED_NOT_DEMONSTRATED`): halt. Either
+     the behavior is already implemented, which is a plan discrepancy, or the test
+     does not test what it claims. Retrying settles neither.
+   - Not testable on this host: do not accept it at face value — the `test-writer`
+     must look for a seam first. If it reports none exists without a design change,
+     halt; the design is the human's. Never let an on-target or manual check stand
+     in for the host test.
+   - No harness exists at all: that is a new dependency, so halt.
+2. Spawn a fresh `batch-implementer` in GREEN mode with the full plan path, exact
+   task text, the demonstrated RED, pre-existing-change note, and earlier-batch
+   file note.
+3. Require its commands and material output plus an authoritative changed-file
    list. The batch is self-verified before it is reviewed: the implementer runs each
    task's verification step, re-reads the task against what it changed, and returns
    real output. If the changed-file list is missing, request only that report detail;
@@ -136,13 +149,15 @@ For each batch in order:
    so in the batch report — reviewing an unverified batch spends a reviewer on
    findings a build would have caught. Carry any deferred check forward, naming the
    command and the machine.
-3. Halt on a reported plan/repository discrepancy, work already present,
-   unexplained verification failure, unauthorized test, new dependency, or
-   unresolved decision. Do not reinterpret it as completed work.
-4. After accessible verification passes, spawn a fresh correctness `reviewer`
+4. Halt on a reported plan/repository discrepancy, work already present,
+   unexplained verification failure, a RED that cannot be demonstrated, a
+   behavior not testable on the host without a design change, a missing test
+   harness, a new dependency, or an unresolved decision. Do not reinterpret any
+   of them as completed work.
+5. After accessible verification passes, spawn a fresh correctness `reviewer`
    and any applicable conventions reviewer concurrently.
 
-Every spawn — implementer, fix, reviewer, and any diagnostic — carries the same warm
+Every spawn — test-writer, implementer, fix, reviewer, and any diagnostic — carries the same warm
 handoff brief from §2b, plus what earlier rounds already tried. A diagnosis spawn that
 begins by re-configuring the build directory has spent the escalation on the thing the
 brief was written to prevent.
@@ -207,6 +222,12 @@ report as text only.
 A check requiring unavailable hardware, credentials, deployment, or another
 machine is not a halt. Record it as deferred with the exact command and target
 environment, then continue.
+
+A test is never such a check. Tests are host-native and mandatory, so the suite
+is always runnable from here: a "deferred test" is a contradiction — either it
+runs on this host, or the code needs a seam so it can, which is a halt. Deferral
+covers reading a real sensor, driving a peripheral, or measuring true timing, and
+such a check is always additional to a host test of the same logic.
 
 Closing-gate retry exhaustion or the need for an in-scope structural refactor
 is not itself a hard halt. Handle it through closing remediation below.
@@ -286,7 +307,12 @@ Report:
 - Never implement or fix code in the parent context.
 - Never run mutating agents concurrently; only read-only reviewers may run in
   parallel.
-- Never add tests unless the approved plan explicitly requires them.
+- Never write tests or production code in the parent context; every batch is a
+  fresh `test-writer` that proves RED, then a fresh `batch-implementer` that
+  turns it green.
+- Never weaken, skip, disable, or delete a test to get a batch through, and never
+  accept a fix that does. If a test is genuinely wrong, that is a plan
+  discrepancy.
 - Never inspect or print secrets or secret-bearing configuration.
 - Never edit repository policy or guideline documents, or the plan beyond
   existing progress markers.

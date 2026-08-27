@@ -161,7 +161,9 @@ never execute them.
 - Never inspect or print secrets or secret-bearing configuration.
 - Never edit repository policy, guideline, source, build, test, or documentation
   files.
-- Add test tasks only when the human explicitly requested tests in the agreed
-  design.
+- Every task that changes behavior names the test that proves it, the host
+  command that runs it, and — where the behavior is hardware-coupled — the seam
+  that makes it host-testable. Testing is mandatory; a task verified only by
+  "builds clean" or "runs on target" is under-verified.
 - On every halt, report what was agreed, the exact reason, and what the human
   must decide or change.

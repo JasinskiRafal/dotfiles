@@ -30,8 +30,9 @@ to phase 1 — do not proceed on a hunch.
 
 ### 4. Implement
 Only once the cause is proven, make the minimal change that addresses it. Then
-re-run the reproduction and show it now behaves correctly (see
-`verification-before-completion`).
+re-run the reproduction and **show the actual command output** proving it now
+behaves correctly. Evidence before assertions — never claim a fix works without
+the output that shows it.
 
 ## Guardrails
 

@@ -7,6 +7,7 @@ developer_instructions = """
 Review one plan document against the agreed design supplied by the parent. There is no implementation diff yet: review whether the document is correct and executable, not hypothetical code defects. Never modify any file or Git state.
 
 Read the plan in full and inspect enough of the repository to confirm that named paths, symbols, constraints, and commands are real. Check:
+- every task that changes behavior naming the test that proves it, the host command that runs it, and the seam that makes a hardware-coupled behavior host-testable at all; a task verified only by "builds clean" or "runs on target", or one leaning on an on-target check in place of a host test, is blocking;
 - design coverage in both directions, including explicit out-of-scope boundaries;
 - task ordering and dependencies;
 - one independently verifiable outcome per task;

@@ -48,13 +48,43 @@ Never read any secrets or API keys, if read by accident,
 always inform the user about it.
 SUPER IMPORTANT! Never print them directly anywhere!
 
-## Testing is opt-in
+## Tests are mandatory, written first, and run on the host
 
-Do **not** assume test-driven development or write tests by default. This
-codebase might includes embedded targets where a test harness can be larger and more
-expensive than the code under test. Write tests only when the human explicitly
-asks (e.g. invokes the `test-driven-development` skill by name), or when a plan
-task explicitly calls for them.
+**Tests are part of the code, not an add-on to it.** Every behavior an agent
+implements arrives with a test that proves it. There is no opt-in flag, no
+"unless the plan asks", and no task that is too small — a change without a test
+is an unfinished change.
+
+**Test-first, and prove RED.** The order is not negotiable:
+
+1. Write the test for exactly one behavior.
+2. **Run it and show it fail** — the real output, naming the behavior that is
+   missing. A test that has never failed has not been shown to test anything; it
+   may pass because the assertion is vacuous, the fixture is wrong, or the case
+   never executes.
+3. Only then write the smallest production change that turns it GREEN.
+4. Re-run and show it pass.
+
+RED that cannot be demonstrated is a **halt**, not a formality to wave through.
+If the test passes before the code exists, either the behavior is already
+implemented — a plan discrepancy — or the test is not testing what it claims.
+
+**Tests run on this host, directly.** Natively compiled, executed by the test
+runner on this machine, in one command a human can re-run. Not cross-compiled to
+a target, not flashed to a device, not inside a container, an emulator, a
+simulator, or over a network to another machine.
+
+This is *why* tests are affordable here rather than a reason they are not. The
+embedded targets are exactly what makes on-target testing expensive, so logic
+belongs behind a host-testable seam and the target-only part stays thin. Where
+code cannot be tested on the host, the **design** is the defect: say so, and
+treat it as a design question for me rather than a licence to skip the test.
+
+**A test is never a deferred check.** Deferring is for things this machine
+genuinely cannot do — reading a sensor, driving a peripheral, measuring real
+timing. Those remain deferred, reported with the exact command and the machine
+they belong on, and they are **not** a substitute for a host test of the same
+logic. "It needs the target" is a claim to be checked, not accepted.
 
 ## Step boundaries — signal completion, never auto-advance
 
@@ -89,7 +119,8 @@ rather than on whatever the session happened to be on.
 
 That is why `/create-plan` and `/implement-plan` may run several phases in one
 invocation. Both delegate every phase and adjudicate the results —
-`/create-plan` to brainstormer, planner and plan-reviewer, `/implement-plan` to
+`/create-plan` to brainstormer, planner, plan-reviewer and plan-simplifier,
+`/implement-plan` to
 implementer, reviewer, and the rarer debugger, verifier and planner. Neither
 orchestrator writes the artifact its own reviewer will read.
 
@@ -111,8 +142,9 @@ guessing).
 
 ## The loop
 
-Design → plan → execute in reviewable batches → verify with evidence. The
-skills in `.claude/skills/` encode each step. Prefer them over improvising.
+Design → plan → execute in reviewable batches → verify with evidence. Each phase
+is a delegated agent in `.claude/agents/`, pinned to its own model and effort;
+the commands below orchestrate them. Prefer them over improvising.
 Plans live as separate numbered files in `plans/`, one file per feature or
 work item — never one monolithic plan document.
 
@@ -120,7 +152,7 @@ Two entry points run the loop end-to-end by delegating, and the plan file is the
 interface between them:
 
 ```
-/create-plan     brainstorm → plan → review the plan → refine → hand over
+/create-plan     brainstorm → plan → review + simplify → refine → hand over
 /implement-plan  implement  → review → refine → next batch → closing gate
 ```
 
@@ -128,18 +160,28 @@ interface between them:
 used on its own or when a run hands you something it could not explain.
 
 There is deliberately nothing else. The per-phase commands that used to exist
-(`/brainstorm`, `/plan`, `/execute`, `/review`, `/verify`, `/tdd`) are gone —
-each phase now lives inside one of the two entry points, or in the skill that
-encodes it, which you may still invoke by name when you want that discipline
-without the whole loop.
+(`/brainstorm`, `/plan`, `/execute`, `/review`, `/verify`, `/tdd`) are gone, and
+so are the per-phase skills that mirrored them — every phase now lives in the
+agent that runs it, reached through one of the three commands. Two skills remain
+because a command depends on each: `systematic-debugging`, which is the substance
+of `/debug`, and `test-driven-development`, which is the discipline the mandatory
+testing rule above runs on.
+
+Do not recreate a phase as a skill. A skill sits in every session's listing as a
+route the model can take *instead* of the command, on whatever model the session
+happens to be on — which is how the old per-phase skills drifted into
+contradicting the commands they were meant to support.
 
 **A reached bound is not a halt.** A review that will not come clean escalates —
 diagnose, re-scope, re-adjudicate, amend the plan — and a stale plan is amended
 rather than abandoned. What stops a run is a progress ledger: two consecutive
 rounds that resolve nothing, change no finding, touch no file and produce no new
 output. The halts that remain are the ones no further agent work can clear: a new
-dependency, an unauthorized test, and a decision that would change what gets
+dependency, an undemonstrable RED, and a decision that would change what gets
 built.
+
+RED that cannot be demonstrated is also such a halt: it means the test or the
+task is wrong, and no further agent work settles which.
 
 Plan numbers are `max + 1` over `plans/*.md` — never the first gap, never reused,
 and a collision is a halt rather than a second file sharing a number.

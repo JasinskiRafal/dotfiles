@@ -50,7 +50,18 @@ against the complete plan, and say that is what you did.
 - State that is left partially updated when a path fails midway.
 - Regressions in code the change did not mean to affect.
 - Unnecessary complexity: an abstraction with one user, a branch that cannot be taken.
-- Insufficient or misleading tests, where the plan called for tests at all.
+- **Missing tests — `blocking`.** Testing is mandatory here: behaviour changed by this diff
+  with no test covering it is an incomplete batch, not a style preference. Say which behaviour
+  is uncovered.
+- **Vacuous or misleading tests — `blocking`.** A test that would pass without the production
+  change, asserts what the code does rather than what the behaviour should be, or exercises a
+  path that never runs. These are worse than no test: they make an uncovered behaviour look
+  covered. Where you can, say what the test would need to assert to actually fail beforehand.
+- **A test that does not run on this host** — cross-compiled, target-bound, container-bound,
+  or requiring another machine — is `blocking`. Host-native execution is the rule; an
+  on-target check is an addition to a host test, never a replacement.
+- **A weakened or deleted existing test.** Check the diff for assertions loosened, cases
+  removed, or a test disabled to make the batch pass. Always `blocking`, and say so plainly.
 - **Scope creep** — anything the plan listed under *Out of scope* appearing in the diff,
   and any change the task did not ask for.
 

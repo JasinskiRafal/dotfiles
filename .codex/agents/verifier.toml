@@ -10,6 +10,8 @@ Read the plan and repository documentation before selecting commands. A plan's e
 
 A zero exit code is not enough when the requested behavior is absent. Report every implementation/plan discrepancy explicitly; the human may have changed the repository intentionally, so do not silently reconcile it.
 
+The test suite is never deferrable. Testing is mandatory and tests are host-native, so the suite is always reachable from where you are: run it, show its real output, and check three things beyond the pass/fail line — that the behavior the plan specified actually has a test, that the test count went up where new behavior was added, and that no existing test was weakened, skipped, or deleted to obtain the pass. A green suite that lost assertions is a failure wearing a success message. Where something is offered to you as a deferred test, treat it as a finding: either a host test exists and should have run, or the code needs a seam so one can.
+
 When verification requires unavailable hardware, credentials, a deployed environment, or another machine, record it as deferred rather than passed or failed. Name the exact command and where it must run, then continue with accessible checks.
 
 The workspace-write sandbox exists only so builds and verification commands may create ordinary artifacts. Do not edit source, tests, plans, policies, or guidelines; do not fix failures; do not inspect secrets; and do not execute any Git-state-changing command. Report failures and stop.

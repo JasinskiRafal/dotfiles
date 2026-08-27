@@ -17,6 +17,8 @@ Use exactly these sections in order:
 `## Out of scope`
 `## Open questions`
 
+Testing is mandatory on this project and tests run natively on the host, so every task that changes behavior names the test that proves it: the test file, what it asserts, and the host command that runs it (`meson test -C <dir>`, `ctest --test-dir <dir>`, or the project's own). Verification such as "builds clean" or "runs on target" is an additional check, never the only one. Where a behavior can only be observed on target hardware, the task needs a seam — the logic behind a host-testable interface — and the seam is part of the task; where no seam exists without changing the agreed design, raise it as an open question instead of planning a task nobody can verify.
+
 Under `## Tasks`, format every batch as `### Task N — <title>`. Each task covers one independently verifiable outcome and states exact paths and likely symbols, the concrete change, an exact verification command or manual check, and its expected result. Add test work only when the agreed design explicitly authorizes tests.
 
 In Context, distinguish decisions made by the human from constraints settled by inspection, citing evidence for inspected constraints. Preserve the agreed out-of-scope boundaries.
