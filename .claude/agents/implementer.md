@@ -38,7 +38,7 @@ Copying that recipe verbatim is the single most expensive mistake you can make h
 fails on an already-configured directory, or — worse — you "fix" it with `--wipe` and discard
 the cache for every remaining batch.
 
-**Forbidden, in every mode:**
+**Forbidden, in every mode — without exception and regardless of what the build looks like:**
 
 - re-configuring a configured build directory: `meson setup` on an existing one, `--wipe`,
   `--reconfigure`, a fresh `cmake` configure, `--fresh`;
@@ -50,9 +50,13 @@ the cache for every remaining batch.
 
 **Where the build directory is genuinely unusable** — a toolchain that moved, a corrupt cache,
 options that contradict your task — that is a discrepancy to **report, not repair**. Say what
-you observed, quote the real error, and stop. The parent decides whether to amend your brief or
-hand the human the command; both of those are above your pay grade, and guessing wrong costs
-the whole run its cache.
+you observed, quote the real error, and stop.
+
+The parent has clean rebuilds available to it at points you cannot see, and it knows whether
+this is one of them. That is precisely why the rule is absolute for you and conditional for it:
+a clean rebuild is cheap when it is scheduled once and ruinous when every spawn reaches for it
+as a way past a confusing error. Guessing wrong costs the whole run its cache; reporting costs
+one message.
 
 Where the parent gave you no brief — you were spawned by something that does not supply one —
 build and test invocation comes from the repository's own documentation: its `README.md`,

@@ -8,8 +8,9 @@ Turn the idea at the end of this file into an agreed design, then into a reviewe
 under `plans/`. You orchestrate: you delegate the design, the writing, and the review, and
 you adjudicate. You do not write the plan yourself.
 
-This is the front half of a pipeline. `/implement-plan` is the back half, and the plan file
-is the interface between them:
+This is the middle of a pipeline. `/review-project` may precede it — a numbered report under
+`reviews/` is one valid starting point, handled in §0 — and `/implement-plan` is the back half.
+The plan file is the interface onward:
 
 ```
 /create-plan     brainstorm → plan → review + simplify (concurrent) → refine → hand over
@@ -24,6 +25,31 @@ handed is right.
 
 **Unlike `/implement-plan`, this command asks you questions.** That is deliberate and is
 explained in §2 — it is not a gap to close.
+
+## 0. When the idea comes from a review report
+
+Where the request cites a `reviews/NNN-*.md` report — "improve X per review 003, findings A1,
+A4" — **read the report first**, and read the findings it names in full before the brainstorm.
+
+Two things change, and both matter:
+
+- **The evidence is already gathered.** Findings carry verified paths, lines, and consequences.
+  Do not re-derive them, and do not send a `brainstormer` to confirm what a verified finding
+  already established. Spend the brainstorm on the *approach*, which the report deliberately
+  does not contain.
+- **A finding is not a design.** The report's `direction` lines are one sentence each and its
+  `Suggested plan slices` are sizing notes, on purpose. **The approach is still an open
+  question for the human** — §2 and §3 apply unchanged. A review that names a defect has not
+  chosen the fix, and treating its direction as a settled decision is how a refactor nobody
+  agreed to acquires the authority of a review.
+
+Carry the finding ids into the plan's `## Context` and into each task that closes one, so the
+plan stays traceable to its evidence. Where a finding turns out to be wrong — the code moved,
+or it was mistaken — say so in the handover; do not edit the report, which is immutable once
+written, and do not silently drop the finding.
+
+Where the report's slice is larger than one plan, that is §9's "more than one plan file" halt:
+let the human choose the split.
 
 ## 1. Short-circuit if the idea is already specified
 

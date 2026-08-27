@@ -105,10 +105,19 @@ reviewable batch so the human can inspect and commit it.
 Three explicit skills provide delegated orchestration around the same phases:
 
 ```text
-$create-plan            brainstorm -> plan -> review the plan -> refine -> hand over
+$review-project         scope -> audit N lenses -> verify findings -> reviews/NNN-*.md
+$create-plan            brainstorm -> plan -> review + simplify -> refine -> hand over
 $implement-plan         implement -> review -> refine -> next batch -> closing gate
 $implement-plan-commit  same as $implement-plan --commit; commits are mandatory
 ```
+
+`$review-project` starts from no request at all: it asks what the code *is*, on
+several lenses concurrently, adversarially verifies every finding, and writes an
+evidenced report under `reviews/`. It changes nothing and never flows into
+`$create-plan` on its own — choosing which findings become work is the human's.
+Review reports are numbered `max(existing) + 1`, cited as "review NNN, finding
+A4", and never edited once written: a superseded review stays as it was and a new
+audit takes a new number.
 
 `$create-plan` is the interactive front half. It delegates repository
 inspection, plan writing, and plan review to fresh specialized agents, asks the
@@ -130,9 +139,17 @@ it.
 What makes per-batch delegation affordable is that the orchestrator establishes
 the project **once** — the build directory, the incremental build and test
 commands, the layout and conventions — and hands the same brief to every spawn.
-A spawn that re-runs project setup costs more than it saves; re-configuring,
+A spawn that re-runs project setup costs more than it saves, so re-configuring,
 wiping, deleting, or duplicating a configured build tree is forbidden to every
-agent and reserved to the human.
+spawned agent, always.
+
+The orchestrator does it at exactly two scheduled points: once before the first
+batch, to establish a baseline that builds and whose suite is green — otherwise no
+later failure can be attributed to a batch — and once at the closing gate, so the
+completion claim is not an artifact of incremental state. Everything in between is
+strictly incremental. `rm -rf` on a build tree remains the human's; the build
+system's own `--wipe`/`--reconfigure`/`--fresh` is the orchestrator's at those two
+points.
 `$implement-plan-commit` is its commit-on wrapper for invocations where the
 human does not want to remember the optional flag. Only an explicit invocation
 selects an orchestrator; ordinary planning and implementation requests continue

@@ -88,8 +88,8 @@ logic. "It needs the target" is a claim to be checked, not accepted.
 
 ## Step boundaries — signal completion, never auto-advance
 
-There are exactly three commands: `/create-plan`, `/implement-plan`, `/debug`.
-Each is one step. When a step is finished:
+There are exactly four commands: `/review-project`, `/create-plan`,
+`/implement-plan`, `/debug`. Each is one step. When a step is finished:
 
 1. **Stop.** Do not begin the next phase on your own initiative.
 2. **Signal completion clearly** — e.g. "Planning complete — plans/007-foo.md".
@@ -98,7 +98,8 @@ Each is one step. When a step is finished:
 4. Wait for the human to invoke the next command.
 
 Why this is strict: each command pins its own model and effort in its own
-frontmatter — `/create-plan` and `/implement-plan` on Opus, `/debug` on Sonnet.
+frontmatter — `/review-project`, `/create-plan` and `/implement-plan` on Opus,
+`/debug` on Sonnet.
 Skills that get auto-loaded mid-session do NOT switch the model; they run on
 whatever model the session is already on. So if you rolled from one phase into
 the next on your own, you'd run it on whatever model the session happened to be
@@ -127,8 +128,16 @@ orchestrator writes the artifact its own reviewer will read.
 What makes per-batch delegation affordable is that the orchestrator establishes
 the project **once** — the build directory, the incremental build and test
 commands, the layout and conventions — and hands the same brief to every spawn.
-A spawn that re-runs project setup costs more than it saves; re-configuring or
-wiping a configured build tree is forbidden to every agent and reserved to me.
+A spawn that re-runs project setup costs more than it saves, so re-configuring or
+wiping a configured build tree is forbidden to every spawned agent, always.
+
+The orchestrator does it at exactly **two scheduled points**: once before the
+first batch, to establish a baseline that actually builds and whose suite is
+green — otherwise no later failure can be attributed to a batch — and once at the
+closing gate, so the completion claim is not an artifact of incremental state.
+Everything in between is strictly incremental. `rm -rf` on a build tree remains
+mine; the build system's own `--wipe`/`--reconfigure`/`--fresh` is the
+orchestrator's at those two points.
 
 Every agent and every command in this workflow states both `model:` and `effort:`
 explicitly. Neither is left to inherit the session's, and neither should be added
@@ -148,18 +157,29 @@ the commands below orchestrate them. Prefer them over improvising.
 Plans live as separate numbered files in `plans/`, one file per feature or
 work item — never one monolithic plan document.
 
-Two entry points run the loop end-to-end by delegating, and the plan file is the
-interface between them:
+Entry points run the loop end-to-end by delegating, and each hands the next a
+file:
 
 ```
-/create-plan     brainstorm → plan → review + simplify → refine → hand over
+/review-project  scope → audit N lenses → verify each finding → reviews/NNN-*.md
+/create-plan     brainstorm → plan → review + simplify → refine → plans/NNN-*.md
 /implement-plan  implement  → review → refine → next batch → closing gate
 ```
 
-`/debug` is the third and last command: a single root-cause pass on a failure,
-used on its own or when a run hands you something it could not explain.
+`/debug` is the fourth command: a single root-cause pass on a failure, used on
+its own or when a run hands you something it could not explain.
 
-There is deliberately nothing else. The per-phase commands that used to exist
+`/review-project` is the only one that starts from no request at all — it asks
+what the code *is*, on several lenses at once, and writes an evidenced report I
+read before deciding what is worth doing. It changes nothing, and it never
+flows into `/create-plan` on its own: choosing which findings become work is
+mine. Review reports are numbered `max + 1` over `reviews/*.md`, cited as
+"review NNN, finding A4", and never edited once written — a superseded review
+stays as it was and a new audit takes a new number.
+
+There is deliberately nothing else, and a fifth command needs a reason of the
+same kind these four have: its own artifact, its own pinned model, and a phase
+boundary I want to stand at. The per-phase commands that used to exist
 (`/brainstorm`, `/plan`, `/execute`, `/review`, `/verify`, `/tdd`) are gone, and
 so are the per-phase skills that mirrored them — every phase now lives in the
 agent that runs it, reached through one of the three commands. Two skills remain

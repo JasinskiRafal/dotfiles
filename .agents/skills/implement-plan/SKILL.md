@@ -76,9 +76,26 @@ in every `batch-implementer` prompt for the rest of the run. This is what makes
 per-batch delegation affordable; skipping it turns each batch into a cold project
 setup.
 
+**There are exactly two clean points in a run, and both are the parent's:** once
+before batch 1, to establish a trustworthy baseline, and once at the closing gate, so
+the completion claim is not an artifact of incremental state. Everything in between is
+strictly incremental and nothing re-configures. Prefer the build system's own clean
+mechanism (`meson setup --wipe <dir>`, `cmake --fresh -S . -B <dir>`) and never
+`rm -rf`, which is unrecoverable on a mistyped path and stays the human's.
+
 **Find the existing build directory before considering a new one.** A configured
 build tree is often hundreds of megabytes and minutes of cross-compilation, and it is
-already on disk. Look for it in this order:
+already on disk. But an inherited directory has unknown provenance — it may be
+configured for another branch, option set, or cross-file, and every batch and the gate
+would inherit that. Before batch 1: check its configuration matches what the plan needs
+(`meson configure <dir>`, `cmake -LA -N -B <dir>` print it without building) and
+clean-configure it once where it does not or where you cannot tell; then build and run
+the host suite once, before any spawn. A baseline that does not build, or whose suite is
+already red, is a halt — with a broken baseline no later failure can be attributed to a
+batch. Print whether it was reused or clean-configured and the baseline suite result.
+Once it passes, the directory is frozen for the run.
+
+Look for it in this order:
 
 - an existing configured directory — `<dir>/meson-info/`, `<dir>/CMakeCache.txt`,
   `<dir>/build.ninja`, or a `compile_commands.json` naming its own directory;
@@ -98,7 +115,10 @@ docs typically show the first build (`meson setup build && meson compile -C buil
 that first line is already paid, and a spawn that copies the recipe verbatim pays it
 again. The brief exists so the spawn never reads that line as an instruction.
 
-**Forbidden to every spawn and to the parent:** re-configuring a configured directory
+**Forbidden to every spawn always, and to the parent between the two clean points**
+— put the prohibition in the brief without the exception, because a spawn never needs
+to know the parent cleans at two points, only that it never does:
+re-configuring a configured directory
 (`meson setup` on an existing one, `--wipe`, `--reconfigure`, a fresh `cmake`
 configure, `--fresh`); deleting or recreating a build directory (`rm -rf <dir>` is
 destructive and belongs to the human); a second directory under a new name; changing
@@ -233,6 +253,24 @@ Closing-gate retry exhaustion or the need for an in-scope structural refactor
 is not itself a hard halt. Handle it through closing remediation below.
 
 ## 6. Run the closing gate
+
+**First, clean-rebuild once — the run's second and last clean point.** Before spawning
+the gate, wipe and re-configure the build directory yourself (`meson setup --wipe <dir>`
+or the project's documented equivalent, never `rm -rf`), rebuild, and run the full host
+suite. Hand that output to both gate agents.
+
+This is not ceremony. Every batch since the baseline was incremental, and incremental
+state hides exactly the defects that matter at a completion claim: a header a
+translation unit uses but never includes, compiling only because a stale object still
+carries it; a file removed from the build definition but still linked from a previous
+object; generated code never regenerated after its input changed; a test passing only
+against a stale fixture or binary; an option changed mid-run whose effect was never
+rebuilt into everything. Each makes a plan look finished and fails on the next clean
+checkout — that is, on the human's machine, after the run reported success.
+
+A clean rebuild that fails is a real finding, not an environment problem: route it like
+any other, and never "resolve" it by returning to the incremental tree, which is exactly
+what was hiding it.
 
 After the last batch, spawn concurrently:
 

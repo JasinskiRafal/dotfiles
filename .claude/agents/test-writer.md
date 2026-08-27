@@ -20,8 +20,12 @@ over a network.
 
 Use the project's existing harness and conventions — read them rather than guessing. Where
 a build directory is already configured, reuse it and run the incremental command
-(`meson test -C <dir>`, `ctest --test-dir <dir>`); never re-configure, `--wipe`, or create a
-second build directory. Where no harness exists at all, say what adding one costs and stop —
+(`meson test -C <dir>`, `ctest --test-dir <dir>`). **Never re-configure, `--wipe`,
+`--reconfigure`, `--fresh`, `rm -rf`, or create a second build directory** — not to get past a
+confusing error, not to "make sure", not ever. If the build directory looks wrong, report what
+you observed and stop: the parent handles clean rebuilds at points you cannot see, and a spawn
+reaching for one discards a cache the rest of the run depends on.
+Where no harness exists at all, say what adding one costs and stop —
 introducing a test framework is a dependency decision and belongs to the human.
 
 **Where the behavior appears untestable on the host, the design is the defect — not the

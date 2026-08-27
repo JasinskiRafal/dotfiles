@@ -43,6 +43,17 @@ amending the plan, not the code. Never quietly reconcile a difference.
 here and tests are host-native, so the suite is always reachable from where you are — there is
 no version of "complete" that omits it. A run with no test evidence is not a verification.
 
+**You are normally handed a freshly clean-rebuilt tree.** The orchestrator wipes and
+re-configures once before the gate, precisely so your evidence is not an incremental artifact,
+and it gives you that output. Use it: where your own run disagrees with the clean-rebuild
+result you were handed, that disagreement **is** the finding — say so rather than picking
+whichever result looks better.
+
+**Do not clean or re-configure anything yourself.** Where you were given no clean-rebuild
+output, say so as a gap in the evidence and verify on the tree as it stands; a completion claim
+resting only on an incremental build is a weaker claim, and naming that is your job rather than
+fixing it.
+
 Check three things beyond the pass/fail line: that the behaviour the plan specified actually
 has a test, that the suite's test count went **up** where new behaviour was added, and that no
 existing test was weakened, skipped, or deleted to obtain the pass. A green suite that lost

@@ -126,7 +126,48 @@ pass verbatim in every `test-writer` and `implementer` prompt for the rest of th
 the section that makes delegation affordable; skipping it turns each batch into a cold project
 setup — and with three spawns per batch that cost is now paid three times over.
 
-### The build directory is yours to choose and theirs to reuse
+### Exactly two clean points in a run — and this is the first
+
+Clean rebuilds are not banned; they are **scheduled**, and both of them are yours:
+
+| When | What | Who |
+|---|---|---|
+| **Once, before batch 1** | establish a trustworthy baseline (below) | you |
+| **Once, at the closing gate** | rebuild from scratch and re-run the suite (§15) | you |
+| **Everything in between** | strictly incremental, never re-configured | nobody re-configures |
+
+The reason the middle is incremental is cost. The reason the ends are not is **trust**: a run
+that never cleans cannot tell you whether the code is correct or whether the cache is lying to
+it, and a run that cleans per batch pays minutes a batch for an answer it already had.
+
+**Prefer the build system's own clean mechanism, never `rm -rf`.** `meson setup --wipe <dir>`,
+`meson setup --reconfigure <dir>`, `cmake --fresh -S . -B <dir>`, or the project's documented
+equivalent. `rm -rf` on a mistyped path is unrecoverable and stays the human's; a scoped
+`--wipe` is not the same command and is yours at these two points.
+
+### The baseline, before batch 1
+
+**Find the existing build directory before considering a new one.** A configured build tree is
+often hundreds of megabytes and minutes of cross-compilation, and it is already on disk.
+
+But do not trust it blindly — **an inherited build directory has unknown provenance.** It may
+be configured for a different branch, a different option set, or a different cross-file, and
+every batch and the closing gate would then inherit that. Before batch 1, establish that the
+baseline is real:
+
+1. **Check its configuration matches what this plan needs** — the options, the generator, the
+   cross-file. `meson configure <dir>` and `cmake -LA -N -B <dir>` print it without building.
+   Where it does not match, or where you cannot tell, **clean-configure it once, now.**
+2. **Build and run the host suite once, before any spawn.** A baseline that does not build, or
+   whose suite is already red, is a **halt** (§10): with a broken baseline you cannot attribute
+   any later failure to a batch, and the whole run's evidence becomes uninterpretable.
+3. **Print the result** — reused as-is, or clean-configured and why, plus the baseline suite
+   result. That line is what every later failure is measured against.
+
+Once that baseline passes, the directory is **frozen for the run**: from here to the closing
+gate nothing re-configures it, and no spawn may.
+
+### Finding it
 
 **Find the existing one before considering a new one.** A configured build tree is often
 hundreds of megabytes and minutes of cross-compilation, and it is already on disk. Look for
@@ -158,25 +199,40 @@ compile -C build`. That first line is a one-time cost that has already been paid
 that copies the recipe verbatim pays it again. The brief exists so the spawn never reads that
 line as an instruction.
 
-### Forbidden to every spawn, and to you
+### Forbidden to every spawn — always — and to you between the two clean points
 
-Re-running project setup is not a fix for a confusing build state — it is the most expensive
-thing in the run, and it discards a cache the whole plan depends on:
+Re-running project setup mid-run is not a fix for a confusing build state — it is the most
+expensive thing in the run, and it discards a cache the rest of the plan depends on. The
+following are **never** a spawn's, in any mode, and not yours either once the baseline has
+passed and until the closing gate:
 
 - **no re-configuring a configured directory** — no `meson setup` on an existing one, no
   `--wipe`, no `--reconfigure`, no `cmake` fresh configure, no `--fresh`;
-- **no deleting or recreating a build directory** — `rm -rf <dir>` is destructive and belongs
-  to the human under §17's destructive tier, whatever the build system;
+- **no deleting or recreating a build directory** — `rm -rf <dir>` is unrecoverable on a
+  mistyped path and stays the human's under §17, whatever the build system and whichever of
+  the two clean points you are at;
 - **no second directory** under a new name because the first looked wrong;
 - **no changing the configured options** (`-Daxelera=`, `-DCMAKE_BUILD_TYPE=`, a different
   `--cross-file`) — that reconfigures the tree for every later batch. A task that genuinely
-  needs different options needs a *second named directory in the brief*, decided here by you,
-  not improvised mid-batch.
+  needs different options needs a *second named directory in the brief*, decided at the
+  baseline by you, not improvised mid-batch.
+
+**Put the prohibition in the brief without the exception.** A spawn never needs to know that
+the orchestrator cleans at two points; it needs to know that *it* never does. Telling a spawn
+about a sanctioned clean is how a spawn talks itself into one.
 
 If a spawn reports that the build directory is genuinely unusable — a toolchain change, a
 corrupt cache, options that contradict the task — that is **not** for it to repair. It reports
-and stops. You decide: amend the brief and re-run the batch, or halt and put the exact
-`meson setup --wipe` / `rm -rf` command in the report for the human, who owns it.
+and stops, and you decide between three moves, in this order:
+
+1. **Amend the brief and re-run the batch**, where the spawn simply used the wrong directory
+   or the wrong command.
+2. **Bring the closing gate's clean rebuild forward**, where the tree really is corrupt. This
+   spends the run's second clean point early: do it once, say so in the batch report, and note
+   that the gate will clean again — the two are separately justified, and skipping the gate's
+   clean because you cleaned mid-run would leave every batch after this one unproven.
+3. **Halt**, where cleaning would not help — a moved toolchain, an option set the plan and the
+   repository disagree about. Put the exact command in the report for the human.
 
 ### What the brief contains
 
@@ -514,10 +570,32 @@ already includes.
 
 ## 15. The closing gate
 
-After the last batch, spawn a fresh `verifier` for the evidence gate and a fresh `reviewer`
-with whole-plan scope. Claim completion only when both come back clean.
+**First, clean-rebuild once — this is the run's second and last clean point.** Before spawning
+the gate, wipe and re-configure the build directory yourself (`meson setup --wipe <dir>` or the
+project's documented equivalent, never `rm -rf`), rebuild, and run the full host suite.
 
-Both get the warm handoff brief, so the gate does not begin by rediscovering the build.
+This is not ceremony. Every batch since the baseline was incremental, and incremental state
+hides exactly the defects that matter at a completion claim:
+
+- a header a translation unit uses but never includes, compiling only because a stale object
+  or precompiled header still carries it;
+- a file removed from the build definition but still linked from a previous object;
+- generated code that was never regenerated after its generator or input changed;
+- a test that passes only against a stale fixture, binary, or copied resource;
+- an option changed mid-run whose effect was never actually rebuilt into everything.
+
+Each of those makes a plan look finished and fails on the next clean checkout — which is to
+say, on the human's machine, after the run reported success.
+
+**A clean rebuild that fails is a real finding, not an environment problem.** Route it like any
+other: a failure you can explain goes to a fix spawn, one nobody can explain goes to §12. Never
+"resolve" it by going back to the incremental tree — that tree is exactly what was hiding it.
+
+Then spawn a fresh `verifier` for the evidence gate and a fresh `reviewer` with whole-plan
+scope, both handed the clean-rebuild output. Claim completion only when both come back clean.
+
+Both get the warm handoff brief, so the gate does not begin by rediscovering the build — and
+the brief now says the tree was just cleaned, so no gate spawn cleans it again.
 
 If either does not come back clean, adjudicate its findings as in §8 and send them to a fresh
 `implementer` in fix mode, then re-run the gate. The gate gets its own budget of **2 rounds**,
@@ -540,10 +618,15 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
   incremental commands, and anything added to it mid-run. It is what every spawn was told, so
   it is the first thing to check when a batch went wrong;
 - batches completed, and the files changed by each;
-- **the spawn count** — implementers, reviewers, and any diagnostic spawns — plus any spawn
-  that reported configuring or re-configuring a build directory. That last one should be zero
-  after batch 1; if it is not, say which spawn and why, because it is the cost this shape
+- **the spawn count** — test-writers, implementers, reviewers, and any diagnostic spawns —
+  plus any spawn that reported configuring or re-configuring a build directory. That last one
+  must be **zero**, always: cleaning is the orchestrator's at two scheduled points and no
+  spawn's ever. A non-zero count names the spawn and why, because it is the cost this shape
   exists to avoid;
+- **the two clean points** — whether the baseline was reused or clean-configured and why, the
+  baseline suite result, and the clean-rebuild result at the gate. A run whose incremental
+  batches passed but whose clean rebuild failed is the single most important line in this
+  report;
 - verification evidence — real command output, not claims;
 - **the RED-to-GREEN record per batch** — the test files added, the failing output that proved
   RED, and the passing output after. This is the evidence that the loop specified before it
@@ -592,10 +675,15 @@ batch that did pass, and the ladder rungs already taken, and make no further cha
   and not a fix to accept from a spawn: a review finding whose fix is "loosen the assertion"
   is rejected, and a spawn that did it is a defect to report. If a test is genuinely wrong, it
   is a plan discrepancy for §14.
-- **Never let a spawn re-run project setup.** The warm handoff names the build directory and
-  the incremental commands; re-configuring, wiping, deleting or duplicating that directory is
-  forbidden to every spawn and to you. `rm -rf <build dir>` and `meson setup --wipe` are
-  destructive-tier commands: they go in the report for the human, not into a spawn's prompt.
+- **No spawn ever re-runs project setup — and you do it at exactly two points.** The warm
+  handoff names the build directory and the incremental commands. Re-configuring, wiping,
+  deleting or duplicating that directory is forbidden to **every spawn, in every mode, always**;
+  it is yours alone, and only at the baseline before batch 1 and the clean rebuild at the
+  closing gate (§15). Between those two points nothing cleans, including you.
+- **Use the build system's clean mechanism, not `rm -rf`.** `meson setup --wipe`,
+  `meson setup --reconfigure`, `cmake --fresh` are scoped and yours at those two points.
+  `rm -rf <build dir>` is not the same command — a mistyped path is unrecoverable — and stays
+  the human's: put it in the report rather than running it.
 
 ## Why running every phase unattended does not break the step-boundary rule
 

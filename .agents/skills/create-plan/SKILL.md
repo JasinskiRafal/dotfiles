@@ -19,6 +19,22 @@ Delegate every specialist phase to a fresh custom agent. Keep the agreed design,
 decision provenance, review findings, adjudication, and iteration count in the
 parent context. Write no production file.
 
+## 0. When the idea comes from a review report
+
+Where the request cites a `reviews/NNN-*.md` report, read the report and the findings it names
+in full before brainstorming. Two things change: the evidence is already gathered, so do not
+re-derive verified findings or send a `brainstormer` to confirm them — spend the brainstorm on
+the approach, which the report deliberately does not contain. And a finding is not a design:
+the report's direction lines are one sentence each and its suggested slices are sizing notes,
+on purpose, so the approach remains an open question for the human. Treating a direction as a
+settled decision is how a refactor nobody agreed to acquires the authority of a review.
+
+Carry the finding ids into the plan's `## Context` and into each task that closes one, so the
+plan stays traceable to its evidence. Where a finding proves wrong — the code moved, or it was
+mistaken — say so in the handover; never edit the report, which is immutable once written, and
+never silently drop the finding. Where the slice is larger than one plan, that is the
+more-than-one-plan-file halt: let the human choose the split.
+
 ## 1. Determine whether design is needed
 
 If the request is fully specified and mechanical, say why the design space is
