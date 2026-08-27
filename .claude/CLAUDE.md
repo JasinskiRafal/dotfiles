@@ -86,10 +86,42 @@ timing. Those remain deferred, reported with the exact command and the machine
 they belong on, and they are **not** a substitute for a host test of the same
 logic. "It needs the target" is a claim to be checked, not accepted.
 
+**This binds the autonomous track; the assisting commands may not pretend
+otherwise.** Everything above governs the loop, where an agent claims a behavior
+is implemented. `/just` makes no such claim — it produces a diff and stops,
+untested by construction — and it must say the change is unverified and name
+`/verify`, never imply that it works. That is the entire exemption: a narrower
+claim, not a lower standard. A change big enough that it needs a test to be
+believed is a change `/just` bails upward on rather than types.
+
+## Two tracks: the autonomous loop, and the assisting commands
+
+There are seven commands, on two tracks, and they are not interchangeable.
+
+**The autonomous loop — four commands.** `/review-project`, `/create-plan`,
+`/implement-plan`, `/debug`. Each is one step of the loop. Each pins its own
+model and effort, each delegates its phases to agents in `.claude/agents/`, and
+the first three each leave a file behind. These carry the full discipline in this
+document: mandatory test-first, evidence for every claim, and a phase boundary I
+stand at.
+
+**The assisting commands — three.** `/just`, `/review`, `/verify`. These are not
+loop steps and they are not phases. Each runs on Sonnet in a single pass,
+delegates nothing, writes no artifact, and hands the result straight back to me.
+I am in the loop for every one of them; they exist for when I already know what I
+want and need typing, a second pair of eyes, or evidence — not for autonomous
+operation.
+
+Never route between the tracks on your own initiative. An assisting command that
+runs into loop-sized work says so and stops — `/just` bails upward and tells me
+to run `/create-plan`, and does not plan it itself. A loop command never
+substitutes an assisting command for one of its delegated phases:
+`/implement-plan`'s reviewer is the `reviewer` agent, never the `/review`
+command, and its closing gate is the `verifier` agent, never `/verify`.
+
 ## Step boundaries — signal completion, never auto-advance
 
-There are exactly four commands: `/review-project`, `/create-plan`,
-`/implement-plan`, `/debug`. Each is one step. When a step is finished:
+Each of the four loop commands is one step. When a step is finished:
 
 1. **Stop.** Do not begin the next phase on your own initiative.
 2. **Signal completion clearly** — e.g. "Planning complete — plans/007-foo.md".
@@ -99,7 +131,7 @@ There are exactly four commands: `/review-project`, `/create-plan`,
 
 Why this is strict: each command pins its own model and effort in its own
 frontmatter — `/review-project`, `/create-plan` and `/implement-plan` on Opus,
-`/debug` on Sonnet.
+`/debug` and all three assisting commands on Sonnet.
 Skills that get auto-loaded mid-session do NOT switch the model; they run on
 whatever model the session is already on. So if you rolled from one phase into
 the next on your own, you'd run it on whatever model the session happened to be
@@ -177,20 +209,29 @@ mine. Review reports are numbered `max + 1` over `reviews/*.md`, cited as
 "review NNN, finding A4", and never edited once written — a superseded review
 stays as it was and a new audit takes a new number.
 
-There is deliberately nothing else, and a fifth command needs a reason of the
-same kind these four have: its own artifact, its own pinned model, and a phase
-boundary I want to stand at. The per-phase commands that used to exist
-(`/brainstorm`, `/plan`, `/execute`, `/review`, `/verify`, `/tdd`) are gone, and
-so are the per-phase skills that mirrored them — every phase now lives in the
-agent that runs it, reached through one of the three commands. Two skills remain
-because a command depends on each: `systematic-debugging`, which is the substance
-of `/debug`, and `test-driven-development`, which is the discipline the mandatory
+The loop takes no fifth step. A new *loop* command needs a reason of the same
+kind these four have: its own artifact, its own pinned model, and a phase
+boundary I want to stand at. The per-phase loop commands that used to exist
+(`/brainstorm`, `/plan`, `/execute`, `/tdd`) are gone, and so are the per-phase
+skills that mirrored them — every loop phase now lives in the agent that runs
+it, reached through one of the four commands above. Two skills remain because a
+command depends on each: `systematic-debugging`, which is the substance of
+`/debug`, and `test-driven-development`, which is the discipline the mandatory
 testing rule above runs on.
 
-Do not recreate a phase as a skill. A skill sits in every session's listing as a
-route the model can take *instead* of the command, on whatever model the session
-happens to be on — which is how the old per-phase skills drifted into
-contradicting the commands they were meant to support.
+`/review` and `/verify` exist again, but as assisting commands rather than as
+the loop phases that once bore those names. They are the human-invoked
+counterparts of the `reviewer` and `verifier` agents — the same lenses, except I
+drive them, on my diff, at a moment of my choosing, and they report to me
+instead of to an orchestrator. Inside a loop run the agents remain the only
+route, per the two-track rule above.
+
+Do not recreate a loop phase as a skill, and do not add an assisting command
+that shadows one. What made the old per-phase skills a problem was that a skill
+sits in every session's listing as a route the model can take *instead* of the
+command, on whatever model the session happens to be on — so it drifted into
+contradicting the command it was meant to support. A command with `model:` and
+`effort:` in its own frontmatter does not have that defect; a bare skill does.
 
 **A reached bound is not a halt.** A review that will not come clean escalates —
 diagnose, re-scope, re-adjudicate, amend the plan — and a stale plan is amended
