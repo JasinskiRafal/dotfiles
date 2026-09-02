@@ -71,6 +71,9 @@ vim.opt.exrc = true
 
 vim.opt.winborder = "rounded"
 
+-- Floating windows are opaque, never blended into what they cover
+vim.opt.winblend = 0
+
 -- Set diagnotics to more easy icons
 vim.diagnostic.config({
   virtual_text = true,
