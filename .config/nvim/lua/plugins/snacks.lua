@@ -43,6 +43,9 @@ require("snacks").setup({
   scope = { enabled = true },
   statuscolumn = { enabled = true },
   words = { enabled = true },
+  styles = {
+    notification = { wo = { winblend = 0 } },
+  },
 })
 
 -- Bufdelete
