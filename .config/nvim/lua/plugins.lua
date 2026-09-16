@@ -28,7 +28,7 @@ require("plugins.mesone")
 require("plugins.neogen")
 require("plugins.neogit")
 require("plugins.opencode")
-require("plugins.render-markdown")
+require("plugins.markdown")
 require("plugins.which-key")
 require("plugins.toggleterm")
 
