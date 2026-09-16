@@ -24,14 +24,12 @@ exact commands you'd recommend so they can copy them, but do not execute them.
 
 ### The one carve-out: `/implement-plan --commit`
 
-`/implement-plan` may run `git add` and `git commit`, and only under all of these
-conditions at once:
-
-- the human passed the explicit **`--commit`** flag on that invocation;
-- the commit happens **after** the batch's reviews came back clean, never before;
-- it commits only the paths that batch's changed-file list names, plus the plan file;
-- the commits are **provisional scratch commits meant to be squashed** — a
-  mechanical `plan NNN batch M: <task heading>` subject, no body, no trailers.
+`/implement-plan` may run `git add` and `git commit`, but only when the human
+passed the explicit **`--commit`** flag on that invocation. Its full conditions —
+only after that batch's reviews came back clean, only the paths on that batch's
+changed-file list plus the plan file, and mechanical `plan NNN batch M: <task
+heading>` subjects that exist to be squashed — are stated in
+`.claude/commands/implement-plan.md` §9, which loads whenever that command runs.
 
 Nothing else widens. **No subagent may ever commit**, the flag never authorizes
 `push`, `merge`, `rebase`, `amend`, `reset`, `stash`, `checkout`, a branch, or a
@@ -125,41 +123,16 @@ command, and its closing gate is the `verifier` agent, never `/verify`.
 in the command's own context. A phase that only reads runs as a spawned agent,
 and every spawn a step needs goes out in a single message.**
 
-`.claude/agents/` therefore holds **read-only agents only** — `auditor`,
-`auditor-verify`, `brainstormer`, `plan-reviewer`, `plan-simplifier`, `reviewer`,
-`verifier`. Each has `tools: Read, Grep, Glob, Bash` and writes nothing.
-
-**Effort is priced by how narrow the job is, not by how important it is.** An
-agent handed a scope it has not seen and asked what is worth reporting earns high
-effort; one handed a path, a line and a claim to check usually settles it on the
-first look, and it is the one that runs many times over. That is why `auditor`
-sits at high and `auditor-verify` at medium, and why `verifier` — which runs a
-command and reports what it printed — sits at low. There is no
+`.claude/agents/` therefore holds **read-only agents only**, each with
+`tools: Read, Grep, Glob, Bash`, writing nothing, and each pinning its own
+`model:` and `effort:` — `ls .claude/agents/` is the inventory. There is no
 `implementer`, `test-writer`, `planner` or `debugger` agent: implementing,
 writing tests, writing and amending plans, and debugging are all things the
 commands do themselves, on the model their own frontmatter pins.
 
-**Why writing is inline.** A cold spawn's expensive half was never the code — it
-was re-deriving the build directory, the layout and the conventions, once per
-spawn and again per fix pass. The command already holds all of it: it read the
-plan, it established the baseline, it has every earlier batch in view. Handing
-that to a fresh agent means writing a brief to reconstruct what the context
-already knows, waiting for it to re-read the plan, and reconciling a summary
-against the tree. For work the orchestrator can simply do, that is pure overhead.
-
-**Why reading is spawned.** Not cost — it *cannot* be done inline. A reviewer
-that also wrote the code is not an independent second look, it is the author
-re-reading their own reasoning. The property the loop rests on is that **the
+**Review is the one thing that is never inline** — at any size, on any round,
+however obvious the finding looks. The property the loop rests on is that **the
 reader never wrote what it reads and cannot see why it was written that way.**
-That depends only on the reviewer being separate, so it survives the writing
-moving inline — and it is why review is the one thing that is never inline, at
-any size, on any round, however obvious the finding looks.
-
-**Why spawns go out together.** Read-only agents cannot conflict with each other,
-so a step needing two reviewers, five audit lenses, or one verify pass per
-finding issues them in one message and pays one wall-clock. A parallel step that
-was serialized is a defect, and the metrics blocks report
-`max_concurrent_spawns` so it is visible.
 
 **The hazard inlining introduces: never edit a file while a spawn is in flight.**
 Spawns keep running while the orchestrator works, so nothing mechanically stops
@@ -169,16 +142,8 @@ longer exists, and a refine round is then spent on a phantom. Finish writing,
 verify, assemble the changed-file list, spawn — then touch nothing until every
 reader of that scope has reported.
 
-**What the split gives up, and what replaces it.** A separate `test-writer` and
-`implementer` could not tune the test to the code, because neither saw the
-other's work. With both inline that pressure is real: a test authored beside its
-implementation tends to assert what the code does rather than what the behavior
-should be. Three things hold the line, and none is optional — RED demonstrated
-*and recorded verbatim* before any production edit exists; the reviewer
-explicitly briefed to audit the test as well as the code, asking whether the
-assertion would pass without the production change; and the RED-to-GREEN record
-per batch as a required report section, with any test *changed* rather than
-added called out by itself.
+Why the split is drawn here, what it costs and what holds the line:
+`.claude/workflow-rationale.md`.
 
 ## Step boundaries — signal completion, never auto-advance
 
@@ -190,58 +155,27 @@ Each of the four loop commands is one step. When a step is finished:
    "Next: run `/implement-plan plans/007-foo.md`"), but do NOT run it yourself.
 4. Wait for the human to invoke the next command.
 
-Why this is strict: each command pins its own model and effort in its own
-frontmatter — `/review-project`, `/create-plan` and `/implement-plan` on Opus,
-`/debug` and all three assisting commands on Sonnet.
-Skills that get auto-loaded mid-session do NOT switch the model; they run on
-whatever model the session is already on. So if you rolled from one phase into
-the next on your own, you'd run it on whatever model the session happened to be
-on rather than the one chosen for that phase. Requiring the human to start each
-step via its command is exactly what keeps the model correct. **Never cross a
-phase boundary without the human.**
+**Never cross a phase boundary without the human.** Each command pins its own
+model and effort in its own frontmatter, and a skill auto-loaded mid-session does
+not switch the model — so rolling forward on your own initiative would run the
+next phase on whatever model the session happened to be on rather than the one
+chosen for it.
 
 The one exception: if the human asks you to elaborate, refine, or keep working
 *within* the current step, continue in that step. The stop applies only to
 moving on to the next step.
 
-### A pinned model crosses a boundary safely; rolling forward does not
-
-The rule protects the *model*, not the ceremony. Two things pin a model, and both
-count: a subagent pins one in its own frontmatter, and **a slash command pins one
-in its own frontmatter too**. Either way the phase runs on a model chosen for it
-rather than on whatever the session happened to be on.
-
-That is why `/create-plan` and `/implement-plan` may run several phases in one
-invocation. Each writes its own artifact on the model its frontmatter pins —
-`/create-plan` the plan, `/implement-plan` the tests and the code — and delegates
-every *reading* phase, concurrently: `/create-plan` to brainstormer,
-plan-reviewer and plan-simplifier, `/implement-plan` to reviewer and verifier.
-Neither orchestrator reviews what it wrote.
-
-What makes this affordable is that the orchestrator establishes the project
-**once** — the build directory, the incremental build and test commands, the
-layout and conventions — and then keeps it, because it is the thing doing the
-work rather than briefing someone else to. Read-only spawns get the parts they
-need. No spawn re-runs project setup: re-configuring or wiping a configured build
-tree is forbidden to every spawned agent, always.
-
-The orchestrator does it at exactly **two scheduled points**: once before the
-first batch, to establish a baseline that actually builds and whose suite is
-green — otherwise no later failure can be attributed to a batch — and once at the
-closing gate, so the completion claim is not an artifact of incremental state.
-Everything in between is strictly incremental. `rm -rf` on a build tree remains
-mine; the build system's own `--wipe`/`--reconfigure`/`--fresh` is the
-orchestrator's at those two points.
-
-Every agent and every command in this workflow states both `model:` and `effort:`
-explicitly. Neither is left to inherit the session's, and neither should be added
-without setting both.
-
-This licenses nothing in-session. Continuing into the next phase yourself, on the
-current session's model, is still forbidden — and both orchestrators still stop
-for the human at their own consent points (`/create-plan` asks its design
-questions and stops before implementation; `/implement-plan` halts rather than
-guessing).
+A pinned model crosses that boundary safely: a slash command pins one in its own
+frontmatter just as a subagent does, which is why `/create-plan` and
+`/implement-plan` may run several phases in one invocation — each writes its own
+artifact on its pinned model and delegates every *reading* phase, concurrently.
+Neither orchestrator reviews what it wrote. **No spawn re-runs project setup**:
+re-configuring or wiping a configured build tree is forbidden to every spawned
+agent, always. The orchestrator does it at exactly two scheduled points — a
+baseline that builds and whose suite is green before batch 1, and a clean rebuild
+at the closing gate — and everything in between is strictly incremental. `rm -rf`
+on a build tree remains mine. Never add an agent or a command without setting
+both `model:` and `effort:`. The reasoning: `.claude/workflow-rationale.md`.
 
 ## The loop
 
@@ -250,81 +184,38 @@ writing phases run inline in the command, on the model and effort its frontmatte
 pins; the reading phases are read-only agents in `.claude/agents/`, each pinned
 to its own, spawned concurrently. Prefer these commands over improvising.
 Plans live as separate numbered files in `plans/`, one file per feature or
-work item — never one monolithic plan document.
-
-Entry points run the loop end-to-end by delegating, and each hands the next a
-file:
-
-```
-/review-project  scope → audit N lenses → verify each finding → reviews/NNN-*.md
-/create-plan     brainstorm → plan → review + simplify → refine → plans/NNN-*.md
-/implement-plan  implement  → review → refine → next batch → closing gate
-```
-
-`/debug` is the fourth command: a single root-cause pass on a failure, used on
-its own or when a run hands you something it could not explain.
+work item — never one monolithic plan document. Each entry point hands the next a
+file: `/review-project` → `reviews/NNN-*.md`, `/create-plan` → `plans/NNN-*.md`,
+`/implement-plan` → the implemented batches. Each command states its own
+numbering, bounds and halt conditions.
 
 `/review-project` is the only one that starts from no request at all — it asks
 what the code *is*, on several lenses at once, and writes an evidenced report I
 read before deciding what is worth doing. It changes nothing, and it never
 flows into `/create-plan` on its own: choosing which findings become work is
-mine. Review reports are numbered `max + 1` over `reviews/*.md`, cited as
-"review NNN, finding A4", and never edited once written — a superseded review
-stays as it was and a new audit takes a new number.
+mine. A review report is never edited once written — a superseded review stays as
+it was and a new audit takes a new number.
 
 The loop takes no fifth step. A new *loop* command needs a reason of the same
 kind these four have: its own artifact, its own pinned model, and a phase
-boundary I want to stand at. The per-phase loop commands that used to exist
-(`/brainstorm`, `/plan`, `/execute`, `/tdd`) are gone, and so are the per-phase
-skills that mirrored them — every loop phase now lives either in the command that
-runs it, where it writes, or in the read-only agent it spawns, where it reads. Two skills remain because a
+boundary I want to stand at. **Do not recreate a loop phase as a skill, and do
+not add an assisting command that shadows one** — `.claude/workflow-rationale.md`
+records why the per-phase skills were removed. Two skills remain because a
 command depends on each: `systematic-debugging`, which is the substance of
 `/debug`, and `test-driven-development`, which is the discipline the mandatory
 testing rule above runs on.
 
-`/review` and `/verify` exist again, but as assisting commands rather than as
-the loop phases that once bore those names. They are the human-invoked
-counterparts of the `reviewer` and `verifier` agents — the same lenses, except I
-drive them, on my diff, at a moment of my choosing, and they report to me
-instead of to an orchestrator. Inside a loop run the agents remain the only
-route, per the two-track rule above.
-
-Do not recreate a loop phase as a skill, and do not add an assisting command
-that shadows one. What made the old per-phase skills a problem was that a skill
-sits in every session's listing as a route the model can take *instead* of the
-command, on whatever model the session happens to be on — so it drifted into
-contradicting the command it was meant to support. A command with `model:` and
-`effort:` in its own frontmatter does not have that defect; a bare skill does.
-
 **Two reviews, never three.** Any review→fix→re-review cycle in this workflow is
-capped at **two rounds**: the review, one fix pass, one re-review. That holds per
-batch in `/implement-plan`, for its closing gate, and for the plan review in
-`/create-plan`. Checking a third time is overkill — two passes having failed on
-the same findings says the *assignment* is wrong rather than the execution, and
-another reviewer will not discover that.
-
-What happens instead of a third review is adjudication, not another spawn:
-re-read the surviving findings assuming the reviewer may be wrong and reject what
-is mistaken, with the rationale in the report; diagnose where a failure is
-unexplained; and where the task itself is the defect, amend the plan and re-run
-that batch once. **A batch closed on stated rejections, or a plan handed over
-with one named open finding, is a legitimate outcome** — better than one ground
-through a third round. My eyes are cheaper than a fourth agent's, and the report
-is where I use them.
-
-**A reached bound is not a halt.** A review that will not come clean is
-adjudicated as above, and a stale plan is amended rather than abandoned. What
-stops a run is a progress ledger: two consecutive rounds that resolve nothing,
-change no finding, touch no file and produce no new output. The halts that remain
-are the ones no further agent work can clear: a new dependency, an undemonstrable
-RED, a second amendment to the same batch, and a decision that would change what
-gets built.
-
-RED that cannot be demonstrated is also such a halt: it means the test or the
-task is wrong, and no further agent work settles which.
-
-Plan numbers are `max + 1` over `plans/*.md` — never the first gap, never reused,
-and a collision is a halt rather than a second file sharing a number.
+capped at **two rounds**: the review, one fix pass, one re-review. What happens
+instead of a third is adjudication, not another spawn: re-read the surviving
+findings assuming the reviewer may be wrong and reject what is mistaken, with the
+rationale in the report; diagnose where a failure is unexplained; and where the
+task itself is the defect, amend the plan and re-run that batch once. **A batch
+closed on stated rejections, or a plan handed over with one named open finding,
+is a legitimate outcome.** A reached bound is not a halt — it changes the
+approach rather than ending the run; what stops a run is a progress ledger of two
+consecutive rounds that resolve nothing, plus the halts no further agent work can
+clear, which each command enumerates (`/implement-plan` §10 and §12).
 
 After every batch spawn a read-only agent to verify that the step is correctly
 implemented against the requirements described — never judge your own batch, at

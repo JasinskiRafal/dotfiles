@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: The write-failing-test-first discipline this project runs on. Testing is mandatory here and tests run natively on the host, so this is the default cycle for any behaviour change, not an opt-in mode. Read it whenever writing a test or turning one green; /implement-plan enforces it per batch via test-writer then implementer.
+description: The write-failing-test-first discipline this project runs on. Testing is mandatory here and tests run natively on the host, so this is the default cycle for any behaviour change, not an opt-in mode. Read it whenever writing a test or turning one green; /implement-plan enforces it per batch, writing the test and the code inline and recording RED before any production edit exists.
 ---
 
 # Test-Driven Development
