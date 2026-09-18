@@ -1,8 +1,6 @@
 ---
 description: Audit the project as it stands on several lenses at once, verify every finding, and write a numbered review report in reviews/ for /create-plan to consume
 argument-hint: [path or subsystem, e.g. firmware/lib] — omit to scope interactively
-model: opus
-effort: medium
 ---
 Audit the project **as it currently stands** and write one numbered review report under
 `reviews/`. You orchestrate: you scope, you delegate the lenses, you verify every finding, you

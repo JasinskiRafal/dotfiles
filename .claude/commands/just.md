@@ -1,8 +1,6 @@
 ---
 description: Small, well-understood change. Skip the planning phases.
 argument-hint: <the change to make>
-model: sonnet
-effort: medium
 ---
 Make the change below directly. No plan file, no phase skills, no design
 discussion. I already know what I want; you are here to type it.

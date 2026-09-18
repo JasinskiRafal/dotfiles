@@ -1,8 +1,6 @@
 ---
 description: Debug a failure by finding the root cause before fixing
 argument-hint: <the bug / failure / wrong behavior>
-model: sonnet
-effort: high
 ---
 Find the root cause of the problem below, prove it, then fix it. **You do this inline, in this
 context** — debugging changes files, so it is not delegated. The only thing you may spawn is a

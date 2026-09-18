@@ -1,8 +1,6 @@
 ---
 description: Critical review of the change against what was actually asked for.
 argument-hint: <what to review> (optional — defaults to the working-tree diff)
-model: sonnet
-effort: high
 ---
 Review the change below. If no argument is given, review the current
 uncommitted diff (read git state only — never modify it).

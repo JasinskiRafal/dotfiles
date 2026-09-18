@@ -1,8 +1,6 @@
 ---
 description: Drive one plan file to done — implement, review at most twice, fix, next batch, closing gate — stopping at the end, or only where it needs you
 argument-hint: [--commit] <plan file, e.g. plans/007-uart-dma.md>
-model: opus
-effort: medium
 ---
 Drive the plan file below from its first task to its last. **You do the writing yourself, in
 this context.** You write each batch's tests, you write the production change, you fix what

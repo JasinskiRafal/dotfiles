@@ -1,8 +1,6 @@
 ---
 description: Prove the work actually does what it claims. Evidence, not assertion.
 argument-hint: <what should be true> (optional — defaults to the last change)
-model: sonnet
-effort: low
 ---
 Verify the work below. If no argument is given, verify the change made in this
 session against what I asked for.

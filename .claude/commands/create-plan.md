@@ -1,8 +1,6 @@
 ---
 description: Brainstorm a rough idea into an agreed design, then write and review a numbered plan in plans/
 argument-hint: <the idea, in your own words>
-model: opus
-effort: medium
 ---
 Turn the idea at the end of this file into an agreed design, then into a reviewed plan file
 under `plans/`. **You write the plan yourself, in this context.** What you delegate is
