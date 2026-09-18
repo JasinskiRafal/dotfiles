@@ -1,45 +1,33 @@
 # Project workflow policy
 
-## Version control is the human's job — do not touch it
+## Version control is the human's job — no destructive Git commands
 
-You (the agent) must **never** run any command that changes git state or the
-project's directory layout. This project owner keeps full manual control of
-version control. Specifically, do not run:
+Before accessing Git, run `git status --short`. You may access Git only when
+the working tree is clean. If it is not clean, do not run further Git commands;
+tell the human that Git access is unavailable until they resolve or explicitly
+accept the existing changes.
+
+You (the agent) must **never** run a destructive command or any command that
+changes Git state. This project owner keeps full manual control of version
+control. Specifically, do not run:
 
 - `git branch`, `git checkout`, `git switch`, `git worktree`
-- `git commit`, `git merge`, `git rebase`, `git reset`, `git cherry-pick`
-  (one narrow exception for `commit`/`add`, below)
+- `git add`, `git commit`, `git merge`, `git rebase`, `git reset`,
+  `git cherry-pick`
 - `git push`, `git pull`, `git stash`
 - Any command that creates, moves, or deletes directories outside the working
   tree the human already has checked out (no scaffolding new worktrees, no
   relocating the repo).
 
-You **may** run read-only git commands to understand state: `git status`,
-`git diff`, `git log`, `git show`, `git blame`. Reading is fine; writing is not.
+When the tree is clean, you **may** run non-mutating Git commands to understand
+state: `git status`, `git diff`, `git log`, `git show`, `git blame`,
+`git rev-parse`, `git symbolic-ref`, and `git show-ref`. Reading is fine;
+writing is not.
 
 Work in place, in the branch and directory the human already has open. When a
 task reaches a point where committing, branching, or merging would make sense,
 **stop and tell the human what you'd suggest** — then let them run it. State the
 exact commands you'd recommend so they can copy them, but do not execute them.
-
-### The one carve-out: `/implement-plan --commit`
-
-`/implement-plan` may run `git add` and `git commit`, but only when the human
-passed the explicit **`--commit`** flag on that invocation. Its full conditions —
-only after that batch's reviews came back clean, only the paths on that batch's
-changed-file list plus the plan file, and mechanical `plan NNN batch M: <task
-heading>` subjects that exist to be squashed — are stated in
-`.claude/commands/implement-plan.md` §9, which loads whenever that command runs.
-
-Nothing else widens. **No subagent may ever commit**, the flag never authorizes
-`push`, `merge`, `rebase`, `amend`, `reset`, `stash`, `checkout`, a branch, or a
-worktree, and without the flag that command commits nothing either. A repository
-whose own `CLAUDE.md` or settings deny agent commits overrides this carve-out
-there.
-
-Why it exists: each approved batch being a commit is what gives the next batch's
-reviewer an exact `HEAD~1..HEAD` scope, and what makes a halt leave only the
-failing batch uncommitted for you to inspect.
 
 ## Never read secrets
 Never read any secrets or API keys, if read by accident,
