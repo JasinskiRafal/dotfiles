@@ -16,6 +16,7 @@ require("dap-view").setup({
       "threads",
       "repl",
       "rtt",
+      "console",
     },
   },
   auto_toggle = true,
