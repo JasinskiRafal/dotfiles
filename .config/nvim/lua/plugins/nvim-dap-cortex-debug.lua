@@ -1,7 +1,5 @@
 vim.pack.add({
-  "https://github.com/JasinskiRafal/nvim-dap-cortex-debug.git",
+  "https://github.com/jedrzejboczar/nvim-dap-cortex-debug.git",
 })
 
-require("dap-cortex-debug").setup({
-  dapui_rtt = false,
-})
+require("dap-cortex-debug").setup({})
