@@ -57,9 +57,6 @@ bindkey ";5D" ctrl-left-subword
 bindkey ";6C" forward-word
 bindkey ";6D" backward-word
 
-# If not running interactively, don't do anything
-[[ -o interactive ]] || return
-
 source "$HOME/.zshaliases"
 source "$HOME/.zshenv"
 
